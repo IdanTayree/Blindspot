@@ -1,0 +1,9 @@
+<svg viewBox="0 0 104 104" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="blindspot">
+  <title>blindspot</title>
+  <!-- Single-colour variant: inherits currentColor, so it works in any context. -->
+  <defs><mask id="void-mono">
+    <circle cx="52" cy="52" r="46" fill="#fff"/>
+    <circle cx="68" cy="41" r="17" fill="#000"/>
+  </mask></defs>
+  <circle cx="52" cy="52" r="46" fill="currentColor" mask="url(#void-mono)"/>
+</svg>

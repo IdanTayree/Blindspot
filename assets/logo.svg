@@ -1,0 +1,15 @@
+<svg viewBox="0 0 104 104" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="blindspot">
+  <title>blindspot</title>
+  <!-- A whole field with a hole punched off-centre — where the optic disc actually sits.
+       The hole is transparent rather than filled, so the mark works on any background. -->
+  <defs>
+    <linearGradient id="bs" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <mask id="void">
+      <circle cx="52" cy="52" r="46" fill="#fff"/>
+      <circle cx="68" cy="41" r="17" fill="#000"/>
+    </mask>
+  </defs>
+  <circle cx="52" cy="52" r="46" fill="url(#bs)" mask="url(#void)"/>
+</svg>

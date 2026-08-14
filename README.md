@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo.png" width="92" alt="">
+
 # blindspot
 
 **A Claude skill that turns an idea — or a half-planned project — into something you can actually build.**
@@ -216,7 +218,9 @@ blindspot/
 │   └── harvest.md               verification protocol and dashboard requirements
 ├── examples/                    a real blueprint, ranking spec and rendered dashboard
 ├── assets/
-│   └── dashboard_template.html  the dashboard's look — edit here, not in Python
+│   ├── dashboard_template.html  the dashboard's look — edit here, not in Python
+│   ├── logo.svg / logo-mono.svg the mark: a whole field with a hole punched off-centre
+│   └── social-preview.png       1280×640, for GitHub's social preview setting
 └── scripts/
     ├── verify_repos.py          GitHub metadata, fetched not recalled
     └── build_dashboard.py       merges the ranked judgement into the template

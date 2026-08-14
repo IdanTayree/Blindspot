@@ -92,6 +92,10 @@ python3 scripts/verify_repos.py --file repos.txt        # one owner/repo per lin
 It returns stars, last push date, freshness, licence, language and archived status. It uses the `gh` CLI when
 installed (5,000 requests/hour instead of 60) and falls back to the public API.
 
+Renames are worth the run on their own. Verifying 60 candidates for one project turned up **nine slugs that
+had silently moved** — `microsoft/presidio`, `Byron/gitoxide`, `argmaxinc/WhisperKit`, `block/goose` and
+others all redirect now. A stale slug in someone'''s notes outlives the rename by years.
+
 ## Layout
 
 ```
@@ -101,7 +105,8 @@ idea-to-blueprint/
 │   ├── interview.md            the quadrants, collision seams, progress table, output format
 │   └── harvest.md              verification protocol and dashboard requirements
 └── scripts/
-    └── verify_repos.py         GitHub metadata, fetched not recalled
+    ├── verify_repos.py         GitHub metadata, fetched not recalled
+    └── build_dashboard.py      renders the ranked dashboard from facts + judgement
 ```
 
 ## Licence

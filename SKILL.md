@@ -126,21 +126,37 @@ So the rule for this phase: **every number that appears in the output was fetche
 4. **Check architecture fit and drop what cannot work.** A Linux-only sandbox is not a candidate for a macOS
    app; a hosted SaaS is not a candidate when the requirement says local. This is where recalled lists fail
    most often.
-5. **Rank, and keep what you demote.** When a better candidate appears, the previous one becomes a ranked
-   alternative with a note explaining the change, so the user can see the reasoning rather than a shuffled
-   list.
+5. **Produce a ranked list per component — at least three deep, numbered 1st, 2nd, 3rd.** Not a winner and a
+   runner-up. The reason is practical: the chosen library will eventually hit a wall — a missing platform, a
+   licence that does not fit, an abandoned maintainer, a feature it turns out not to have — and at that
+   moment the user needs the next option *already evaluated*, not a fresh search weeks later when they have
+   forgotten why they picked the first one. Each entry carries **why it is not first**, which is what makes
+   the list usable under pressure. When a better candidate appears later, it takes first place and everything
+   else shifts down with a note explaining the change; nothing is ever silently dropped.
 6. **Produce the dashboard** — a single self-contained HTML file with filtering by category, verified star
-   counts, freshness badges from real dates, ranked alternatives with reasons, and a fit note per candidate
-   against the target stack.
+   counts, freshness badges from real dates, the full ranked list per component with each entry's reason for
+   its position, and a fit note per candidate against the target stack.
 
-Run the verifier like this:
+Both scripts are bundled, so this phase is three commands rather than an afternoon:
 
 ```bash
+# 1. facts — fetched, never recalled
 python3 scripts/verify_repos.py owner/repo owner/repo2 ... > verified.json
+
+# 2. judgement — you write harvest.json: components, rankings, and each entry's
+#    "why", "promote" and "fit" (the format is documented in build_dashboard.py)
+
+# 3. the page
+python3 scripts/build_dashboard.py harvest.json verified.json out.html
 ```
 
-It uses the `gh` CLI when available (higher rate limits) and falls back to the public API. Anything it could
-not verify is marked `"verified": false` — say so in the output rather than filling the gap with a guess.
+The split is deliberate: **you write the judgement, the scripts write the facts.** A dashboard with recalled
+star counts looks identical to one with real ones, which is why they must come from different places.
+
+`verify_repos.py` uses the `gh` CLI when available (higher rate limits) and falls back to the public API;
+anything it could not confirm is marked `"verified": false`, and that must be reported as unverified rather
+than filled in from memory. `build_dashboard.py` warns on stderr about any component ranked fewer than three
+deep — that warning is a finding for the summary, not noise to ignore.
 
 The full verification protocol and the dashboard requirements are in **`references/harvest.md`**.
 

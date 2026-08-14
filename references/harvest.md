@@ -41,7 +41,9 @@ queue rust embedded", "on-device wake word detection macOS". Look for:
 - recent commits, not merely a recent release
 - a licence compatible with what the user is building
 
-Aim for a primary and one or two alternatives per component. More than three is noise.
+**Aim for at least four candidates per component so that three or more survive verification.** Some will turn
+out to be archived, on the wrong platform, or unlicensed, and a component that ends up with a single survivor
+is a component with no fallback.
 
 ### 3. Verify — always, with the script
 
@@ -67,18 +69,51 @@ For each surviving candidate, answer in one line: **can this actually run in the
 language, runtime dependency, and whether it is a library or a service. A candidate that fails fit is
 excluded with the reason stated — the exclusion is useful information, not clutter.
 
-### 5. Rank, and keep what you demote
+### 5. Rank at least three deep, and keep what you demote
 
-When a better candidate appears, the previous one becomes a **ranked alternative** with a note explaining the
-change. Never silently drop it. The user is choosing, and the reason one option lost is often more useful
-than the winner's description.
+Every component gets a **numbered list — 1st, 2nd, 3rd, and further where the field is rich** — not a winner
+and a runner-up.
+
+The reason is practical rather than tidy. Whatever gets picked will eventually hit a wall: a platform it does
+not support, a licence that turns out to be wrong for shipping, a maintainer who stops, a feature everyone
+assumed was there. At that moment the user needs the next option **already evaluated**, with its trade-offs
+written down — not a fresh search weeks later, when the reasoning behind the original choice has been
+forgotten and the whole comparison has to be redone.
+
+So each entry carries two things:
+
+- **Why it is at this position** — the specific trade-off that put it below the one above. "Stronger isolation,
+  but requires a Linux VM on macOS." "Simpler API, no durable retries."
+- **What would promote it** — the condition under which the user should switch. "Pick this instead if the
+  project ever needs to run untrusted code from strangers." This is the line that makes the list useful under
+  pressure, because it tells them *when* to reach for the fallback, not merely that one exists.
+
+When a better candidate appears later, it takes first place and the rest shift down, each keeping its note.
+Nothing is ever silently dropped — the reason a candidate lost is frequently more useful than the winner's
+description, and a rejected option that quietly disappears gets re-investigated six months later.
 
 ## The dashboard
 
-A single self-contained HTML file — no external scripts, stylesheets, fonts or images, since it must open
-from disk and survive being emailed. Requirements:
+**Use `scripts/build_dashboard.py` rather than hand-writing HTML.** Write the rankings and reasoning into a
+`harvest.json` (its format is documented at the top of that script), then:
 
-- **One card per component**, showing the primary candidate and its ranked alternatives.
+```bash
+python3 scripts/build_dashboard.py harvest.json verified.json out.html
+```
+
+It merges the judgement with the verified facts, renders renames and archived status automatically, and warns
+on stderr about any component ranked fewer than three deep — treat that warning as a finding to report, since
+a component with one survivor has no fallback.
+
+Hand-writing the page instead means re-deciding the layout every time and, more importantly, makes it easy to
+type a number that was never fetched.
+
+The generated page is a single self-contained HTML file — no external scripts, stylesheets, fonts or images,
+so it opens from disk and survives being emailed. What it renders:
+
+- **One card per component**, showing the full ranked list — 1st, 2nd, 3rd and beyond — each numbered, each
+  with its position rationale and its promotion condition. The list is the product; a card showing only a
+  winner has thrown away most of the work.
 - **Verified numbers only**, each with the date verified. Unverified fields say so in words.
 - **A freshness badge** computed from the real `pushed_at`, not a vibe: e.g. active (<90 days), maintained
   (<1 year), stale (>1 year).

@@ -35,12 +35,26 @@ In the interview this skill was built from, *every single* unknown-unknown came 
 and none came from an open question. So the skill hunts for collisions first and falls back to open questions
 only when it cannot find one.
 
+### Three depths, chosen up front
+
+The first message asks which one you want, because getting it wrong wastes the interview — a beginner asked
+about durability guarantees goes quiet, and an expert asked "phone or computer?" stops answering properly.
+
+| | **1 — Absolute beginner** | **2 — Moderate** | **3 — Pro** |
+|---|---|---|---|
+| Questions | always two plain options, each with what it costs | choices for technical decisions, open for product ones | open questions, blunt trade-offs |
+| Jargon | none | glossed in a clause | assumed |
+| Depth | what it does and who for | local or hosted, web or app, who pays | failure modes, concurrency, durability, licences |
+| Collisions | raised gently | raised plainly | chased hard |
+| Length | 12–18 questions | 25–40 | 40+ |
+
+You can move between levels at any time by saying "simpler" or "go deeper".
+
 Three other things it does deliberately:
 
-- **Forced choices by default.** "Sign in with Google, or email and password? Google is faster to build and
-  means no password resets; email works for people who avoid Google accounts." People can react even when they
-  cannot generate — which is what makes this usable by someone without a technical background. It escalates to
-  open questions when you show you have opinions.
+- **Forced choices where they help.** "Sign in with Google, or email and password? Google is faster to build
+  and means no password resets; email works for people who avoid Google accounts." People can react even when
+  they cannot generate — which is what makes this usable by someone without a technical background.
 - **Assume the small things and say so.** Non-critical gaps become written assumptions you can correct, rather
   than questions that turn an interview into a chore.
 - **Check claims instead of transcribing them.** If you assert something checkable — a tool exists, a licence
@@ -104,10 +118,15 @@ idea-to-blueprint/
 ├── references/
 │   ├── interview.md            the quadrants, collision seams, progress table, output format
 │   └── harvest.md              verification protocol and dashboard requirements
+├── assets/
+│   └── dashboard_template.html the dashboard's look — edit here, not in Python
 └── scripts/
     ├── verify_repos.py         GitHub metadata, fetched not recalled
-    └── build_dashboard.py      renders the ranked dashboard from facts + judgement
+    └── build_dashboard.py      merges the ranked judgement into the template
 ```
+
+The template is a real file rather than a string inside the script, so every project's dashboard comes out
+consistent instead of being reinvented per run — and reskinning it means editing CSS, not code.
 
 ## Licence
 

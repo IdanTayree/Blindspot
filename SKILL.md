@@ -26,10 +26,27 @@ with.
 
 1. **Reflect the idea back in one sentence** so a misunderstanding surfaces now rather than at question
    thirty. "So: a mobile app where dog walkers list availability and owners book them. Right?"
-2. **Create the blueprint file immediately** — `<slug>-blueprint.md` in the working directory — and write the
-   idea into it. This is not tidiness. Long interviews outlive the context window; an interview that lives
-   only in the conversation dies when the conversation is compacted, and the user loses an hour of decisions.
-3. Say where the file is, and that every answer lands there as it comes.
+2. **Ask which depth to run at**, in the same message. This is the one question worth asking up front,
+   because getting it wrong wastes the whole interview: a beginner asked about durability guarantees goes
+   quiet, and an expert asked "do you want it on a phone or a computer?" gets bored and stops answering
+   properly.
+
+   > **1 — Absolute beginner.** You know what you want, not how software gets built. Plain language, no
+   > jargon, always a choice between two options with what each costs you.
+   > **2 — Moderate.** You have built or shipped something before. A mix of choices and open questions.
+   > **3 — Pro.** You know the stack. Open questions, blunt trade-offs, and I will chase contradictions hard.
+
+3. **Create the blueprint file immediately** — `<slug>-blueprint.md` in the working directory — and write the
+   idea and the chosen depth into it. This is not tidiness. Long interviews outlive the context window; an
+   interview that lives only in the conversation dies when the conversation is compacted, and the user loses
+   an hour of decisions.
+4. Say where the file is, and that every answer lands there as it comes.
+
+The depth is a starting point, not a cage. If someone at level 1 starts using precise language, move up and
+say so in a clause. If someone at level 3 stalls on a question, drop to a forced choice for that one question.
+They can also just say "go deeper" or "simpler" at any point.
+
+Per-level question style, pacing and stopping points are in **`references/interview.md`**.
 
 ### The loop
 
@@ -62,18 +79,25 @@ In priority order:
 
 Never ask something you can look up, and never ask something whose answer would not change the build.
 
-### Question style — forced choices by default
+### Question style — set by the depth level
 
 Most people cannot answer *"how should authentication work?"* — but almost anyone can answer *"sign in with
 Google, or email and password? Google is faster to build and means no password resets; email works for people
 who avoid Google accounts."*
 
-So the default shape is: **two or three concrete options, each with what it costs.** People can react even
-when they cannot generate, and reacting still gives you their real preference.
+That difference is what the levels encode:
 
-Escalate to open questions when they show they have opinions — long answers, unprompted detail, corrections
-of your framing. Experts find forced choices constraining; beginners find open questions paralysing. Read
-which one you have and adjust; do not ask them which they are.
+| | **1 — Absolute beginner** | **2 — Moderate** | **3 — Pro** |
+|---|---|---|---|
+| Question shape | always two options, plain words, each with a plain consequence | choices for technical decisions, open questions for product ones | open questions; blunt trade-offs |
+| Jargon | none; explain any unavoidable term in the same breath | used with a one-clause gloss | assumed |
+| How deep | what it does and who it is for — never libraries or architecture | broad technical shape: local or hosted, web or app, who pays | implementation depth: failure modes, concurrency, durability, licences |
+| Assumptions | assume aggressively, state each one | assume the routine, ask the load-bearing | assume little; they will correct you |
+| Collisions | raised gently, one side at a time | raised plainly | chased hard — this is where the value is |
+| Roughly | 12–18 questions | 25–40 | 40+, until it converges |
+
+Whatever the level, **people can react even when they cannot generate** — so when someone stalls on an open
+question, turning it into two concrete options usually unsticks them immediately.
 
 ### Assume the small things, and say so
 
@@ -95,8 +119,10 @@ interview better than a template.
 ### Knowing when to stop
 
 Track the **spawn rate**: how many new open questions each answer creates. Early on it is around one per
-answer — the idea is still expanding. When it falls below roughly **one new question per three answers**, the
-interview has converged.
+answer — the idea is still expanding. Convergence is when it falls below **one new question per two answers
+at level 1**, or **one per three at levels 2 and 3**. Beginners are stopped earlier on purpose: past a certain
+point the questions are about decisions they have no basis to make, and answering those badly is worse than
+leaving them as stated assumptions for whoever builds it.
 
 At that point, say so, show the progress table, and offer to move to the harvest. Do not stop earlier because
 it feels long, and do not continue on autopilot once it has converged. The user may also stop whenever they

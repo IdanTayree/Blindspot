@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>$title</title>
+<!--
+  Template for build_dashboard.py. Placeholders are $-style (string.Template), so CSS braces need no
+  escaping and this file can be edited directly without touching Python.
+
+  Placeholders (each prefixed with a dollar sign in the markup below, and deliberately NOT written that way
+  here — a literal one in this comment would be substituted too, and the page would render twice):
+  title, subtitle, target, components, ranked, excluded, checked, chips, sections.
+
+  Deliberately a single dark theme rather than a light/dark pair — this is a dense technical page that gets
+  read for long stretches, and the palette was chosen to be lived in. Edit the tokens below to reskin it;
+  nothing outside :root hardcodes a colour.
+-->
+<style>
+:root {
+  --bg-primary:#0a0d14;
+  --bg-secondary:#121722;
+  --bg-card:rgba(22,29,44,.7);
+  --border-subtle:rgba(255,255,255,.08);
+  --border-accent:rgba(99,102,241,.3);
+  --accent-indigo:#6366f1;
+  --accent-cyan:#06b6d4;
+  --accent-emerald:#10b981;
+  --accent-amber:#f59e0b;
+  --accent-rose:#f43f5e;
+  --text-main:#f1f5f9;
+  --text-muted:#94a3b8;
+  --text-dim:#64748b;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px;
+  --shadow-card:0 10px 30px -10px rgba(0,0,0,.5);
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--bg-primary); color:var(--text-main);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.13), transparent);
+  background-repeat:no-repeat;
+}
+.wrap { max-width:1140px; margin:0 auto; padding:44px 22px 90px; }
+
+header.top { margin-bottom:26px; }
+h1 {
+  font-size:34px; margin:0 0 8px; letter-spacing:-.025em; text-wrap:balance;
+  background:linear-gradient(to right, #fff, var(--text-muted));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.sub { color:var(--text-muted); margin:0; font-size:14.5px; }
+.meta {
+  display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;
+}
+.stat-pill {
+  background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:var(--radius-sm);
+  padding:9px 14px; font-size:12.5px; color:var(--text-dim);
+}
+.stat-pill b { color:var(--text-main); font-size:15px; font-variant-numeric:tabular-nums; margin-right:5px; }
+
+.note {
+  background:rgba(99,102,241,.08); border:1px solid var(--border-accent);
+  border-radius:var(--radius-md); padding:14px 18px; margin:24px 0 28px;
+  font-size:13.5px; color:var(--text-muted);
+}
+.note b { color:var(--text-main); }
+
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+.chip {
+  font:inherit; font-size:12.5px; padding:6px 13px; cursor:pointer;
+  background:var(--bg-secondary); color:var(--text-muted);
+  border:1px solid var(--border-subtle); border-radius:999px;
+  transition:border-color .15s, color .15s;
+}
+.chip:hover { border-color:var(--border-accent); color:var(--text-main); }
+.chip:focus-visible { outline:2px solid var(--accent-indigo); outline-offset:2px; }
+.chip.on {
+  background:linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+  color:#fff; border-color:transparent;
+}
+
+.component {
+  background:var(--bg-card); border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg); padding:22px 24px; margin-bottom:18px;
+  box-shadow:var(--shadow-card);
+}
+.component > header {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 14px;
+  padding-bottom:14px; margin-bottom:6px; border-bottom:1px solid var(--border-subtle);
+}
+.component h2 { font-size:18.5px; margin:0; letter-spacing:-.015em; color:var(--text-main); }
+.job { margin:0; color:var(--text-dim); font-size:13.5px; flex:1 1 260px; }
+.depth {
+  font-size:11.5px; color:var(--accent-cyan); background:rgba(6,182,212,.1);
+  border:1px solid rgba(6,182,212,.25); padding:3px 10px; border-radius:999px; white-space:nowrap;
+}
+
+ol.cands { list-style:none; margin:0; padding:0; }
+.cand { display:flex; gap:15px; padding:16px 0; border-bottom:1px solid var(--border-subtle); }
+.cand:last-child { border-bottom:none; padding-bottom:0; }
+.rank {
+  flex:0 0 32px; height:32px; border-radius:50%; display:grid; place-items:center;
+  font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;
+  background:rgba(255,255,255,.06); color:var(--text-dim);
+  border:1px solid var(--border-subtle);
+}
+.cand:first-child .rank {
+  background:linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+  color:#fff; border-color:transparent;
+}
+.body { flex:1; min-width:0; }
+.name { font-family:var(--mono); font-size:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.name a { color:var(--text-main); text-decoration:none; border-bottom:1px solid var(--border-accent); }
+.name a:hover { color:var(--accent-indigo); border-bottom-color:var(--accent-indigo); }
+
+.facts { display:flex; flex-wrap:wrap; gap:7px 12px; align-items:center; margin:8px 0; font-size:12px; color:var(--text-dim); }
+.stat b { color:var(--text-main); font-variant-numeric:tabular-nums; }
+.badge { font-size:11px; padding:2.5px 9px; border-radius:999px; background:rgba(255,255,255,.06); color:var(--text-dim); border:1px solid var(--border-subtle); }
+.badge.active { background:rgba(16,185,129,.12); color:var(--accent-emerald); border-color:rgba(16,185,129,.25); }
+.badge.maintained { background:rgba(245,158,11,.12); color:var(--accent-amber); border-color:rgba(245,158,11,.25); }
+.badge.stale, .badge.bad { background:rgba(244,63,94,.12); color:var(--accent-rose); border-color:rgba(244,63,94,.28); }
+.badge.warn { background:rgba(245,158,11,.12); color:var(--accent-amber); border-color:rgba(245,158,11,.25); }
+.lang { font-family:var(--mono); font-size:11.5px; color:var(--text-dim); }
+
+.desc { margin:7px 0; font-size:13px; color:var(--text-muted); }
+.why, .promote, .fit { margin:6px 0; font-size:13px; color:var(--text-muted); }
+.fit { font-size:12.5px; color:var(--text-dim); }
+.why b { color:var(--accent-indigo); font-weight:600; }
+.promote b { color:var(--accent-cyan); font-weight:600; }
+.fit b { color:var(--text-muted); font-weight:600; }
+
+.excluded { margin-top:16px; border-top:1px dashed var(--border-subtle); padding-top:14px; }
+.excluded summary { cursor:pointer; font-size:12.5px; color:var(--accent-rose); }
+.excluded summary:focus-visible { outline:2px solid var(--accent-indigo); outline-offset:3px; }
+.excluded ul { margin:11px 0 0; padding-left:20px; font-size:12.5px; color:var(--text-dim); }
+.excluded li { margin-bottom:7px; }
+.excluded b { font-family:var(--mono); color:var(--text-muted); }
+
+footer { margin-top:38px; padding-top:20px; border-top:1px solid var(--border-subtle); font-size:12.5px; color:var(--text-dim); }
+</style></head><body><div class="wrap">
+
+<header class="top">
+  <h1>$title</h1>
+  <p class="sub">$subtitle</p>
+  <div class="meta">
+    <span class="stat-pill"><b>$components</b> components</span>
+    <span class="stat-pill"><b>$ranked</b> ranked candidates</span>
+    <span class="stat-pill"><b>$excluded</b> excluded, with reasons</span>
+    <span class="stat-pill">verified <b>$checked</b></span>
+  </div>
+</header>
+
+<p class="note"><b>Every number on this page was fetched from the GitHub API</b> on $checked — stars, last
+push, licence and archived status. Nothing is recalled. Where GitHub reports no licence, this page says so
+rather than guessing, and a repository that has been renamed shows the slug it moved from.
+Target stack: $target.</p>
+
+<div class="chips"><button class="chip on" data-filter="all">All</button>
+$chips</div>
+
+$sections
+
+<footer>Ranked lists go at least three deep by design: whatever gets chosen will eventually hit a wall, and
+the next option needs to be already evaluated rather than researched again months later. Each entry carries
+why it sits where it does and the condition that would promote it.</footer>
+</div>
+<script>
+const chips=[...document.querySelectorAll('.chip')],secs=[...document.querySelectorAll('.component')];
+chips.forEach(c=>c.addEventListener('click',()=>{
+  chips.forEach(x=>x.classList.toggle('on',x===c));
+  const f=c.dataset.filter;
+  secs.forEach(s=>s.style.display=(f==='all'||s.dataset.id===f)?'':'none');
+}));
+</script></body></html>

@@ -119,6 +119,62 @@ Two rules about this file:
 - **Write after every answer, not at the end.** An interview held only in conversation dies when the context
   window fills, and forty minutes of their decisions go with it.
 
+## The three depth levels, in practice
+
+The level is chosen in the first message and can move at any time. What follows is the same interview run at
+three different altitudes — the *technique* never changes, only the vocabulary, the depth of probing, and how
+hard collisions get pushed.
+
+### Level 1 — absolute beginner
+
+They know exactly what they want and nothing about how software is built. The risk is not that they answer
+badly; it is that they **stop answering**, because a question they cannot parse feels like a test they are
+failing. Everything here protects against that.
+
+- **Every question is two options in plain words**, each with a plain consequence. Not three, not open.
+- **No jargon at all.** Not "authentication" — "how people prove it's them". Not "offline-first" — "does it
+  need to work with no internet?"
+- **Never ask about implementation.** Frameworks, databases, hosting, languages: assume them, state the
+  assumption, and move on. They cannot choose between Postgres and SQLite, and asking teaches them nothing.
+- **Collisions are raised gently**, one side at a time: *"Earlier you said nobody should need an account.
+  This part needs to know who someone is to save their bookings. Which matters more?"*
+- **Stop earlier** — around 12–18 questions, or once the spawn rate drops below one new question per two
+  answers. Past that, the remaining questions are decisions they have no basis to make, and a bad answer is
+  worse than a written assumption.
+
+Example of the same question at this level:
+
+> **Q:** Should people be able to use it without making an account?
+> **Yes** — anyone can try it instantly, but nothing they do is saved if they close it.
+> **No** — everything is saved and syncs to their phone, but some people leave rather than sign up.
+
+### Level 2 — moderate
+
+They have shipped something before. They know what a database is; they may not know what a durable execution
+engine is.
+
+- **Choices for technical decisions, open questions for product ones.** They have real opinions about what
+  the thing should do, and fewer about how to build it.
+- **Jargon with a one-clause gloss:** "a queue that survives a restart — so a crash doesn't lose the work".
+- **Depth stops at broad shape**: local or hosted, web or native, who pays, what happens offline. Not
+  library selection — that is what the harvest is for.
+- **Collisions raised plainly**, both sides at once, as a fork with consequences.
+- Typically 25–40 questions.
+
+### Level 3 — pro
+
+They know the stack and will find hand-holding irritating.
+
+- **Open questions.** Forced choices only when they genuinely stall, and then just for that question.
+- **Assume the vocabulary.** No glosses, no explaining.
+- **Go to implementation depth** — failure modes, concurrency, durability, licences, what happens at 3am when
+  nobody is watching. This is where a pro-level interview earns its keep, because these are the questions
+  that get skipped and then cost weeks.
+- **Chase collisions hard**, and say plainly when two answers cannot both hold. A pro will usually produce a
+  third option better than either side of the fork — that is the single highest-value moment in the method.
+- **Correct false premises directly and briefly.** At this level they would rather be told than humoured.
+- 40+ questions, until the spawn rate genuinely converges.
+
 ## Tone
 
 Short. Bottom line first. The user is thinking hard about their own idea; long replies interrupt that. Two or

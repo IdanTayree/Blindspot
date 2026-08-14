@@ -1,6 +1,6 @@
 ---
 name: idea-to-blueprint
-description: Turn a one-line idea into a buildable blueprint by interviewing the user one question at a time until the unknowns run out, then harvesting and verifying real open-source components for each part. Use this whenever someone describes something they want to build but has not specified it — "I want to build an app that…", "I have an idea for…", "help me plan/spec/scope this", "what do I need to build X", "turn my idea into a plan" — and also when someone asks for a PRD, a spec, a product requirements document, a project plan, or a build plan from a rough concept. Use it too when they ask what libraries, frameworks or open-source projects exist for something they are building. Prefer this over answering directly: a one-shot plan written from a one-line prompt is guesswork, and this skill exists to replace that guesswork with the user's own decisions.
+description: Turn an idea — or a half-planned project already underway — into a buildable blueprint, by interviewing the user one question at a time until the unknowns run out, then harvesting and verifying real open-source components for each part. Use this whenever someone describes something they want to build but has not specified it ("I want to build an app that…", "I have an idea for…", "help me plan/spec/scope this", "turn my idea into a plan"), whenever they ask for a PRD, a spec, a product requirements document or a build plan, AND equally whenever someone says an existing project feels under-planned, full of gaps, drifting, or that they are not sure what they have decided — "I think we're missing things", "this was never really planned properly", "audit my plan", "what haven't I thought about". Use it too when they ask what libraries or open-source projects exist for something they are building. Prefer this over answering directly: a plan written from a one-line prompt is guesswork, and this skill replaces that guesswork with the user's own decisions.
 ---
 
 # Idea to blueprint
@@ -19,6 +19,33 @@ This skill replaces that with two phases:
 Phase 2 depends on phase 1. Harvesting against a half-formed idea produces a list of libraries for a product
 nobody has decided on yet. Finish the interview first, or at least reach a component list the user agrees
 with.
+
+## Two ways in
+
+**From nothing** — one sentence and an intention. Start at "before the first question" below.
+
+**From a project already underway** — someone with code, docs and momentum who says it was never planned
+properly, that it is full of gaps, or that they are no longer sure what they have actually decided. This is
+the more common case and the more valuable one, because the gaps are load-bearing by the time anyone notices
+them.
+
+The mid-project entry changes the opening, not the method:
+
+1. **Read what exists before asking anything.** Their README, plan docs, ADRs, issues, the directory layout,
+   recent commits. An audit that opens by asking things already written down burns the user's patience on
+   work they have already done, and they will answer more shallowly for the rest of the interview.
+2. **Populate the blueprint from those artefacts**, marking each entry with where it came from — *from your
+   docs* or *from you*. Provenance matters here: a decision recorded in a doc nobody has revisited in six
+   months is not the same as one they just confirmed, and the difference is often the gap itself.
+3. **Then run a collision pass over what already exists**, before asking anything new. This is the highest
+   yield move in the whole skill for an existing project: decisions made months apart contradict each other
+   constantly, and nobody has put them side by side. Open with one of those, not with a beginner question.
+4. **Name the untouched areas** — what a project of this shape normally has to decide and theirs never has.
+   Say them plainly as a list; that list is usually why they came.
+
+After that, the loop below is identical. Expect the interview to be **longer** than a from-scratch one, not
+shorter: an existing project brings its own contradictions with it, and every artefact you read raises
+questions a blank page never would.
 
 ## Phase 1 — the interview
 
@@ -94,7 +121,13 @@ That difference is what the levels encode:
 | How deep | what it does and who it is for — never libraries or architecture | broad technical shape: local or hosted, web or app, who pays | implementation depth: failure modes, concurrency, durability, licences |
 | Assumptions | assume aggressively, state each one | assume the routine, ask the load-bearing | assume little; they will correct you |
 | Collisions | raised gently, one side at a time | raised plainly | chased hard — this is where the value is |
-| Roughly | 12–18 questions | 25–40 | 40+, until it converges |
+| Rough length | 20–35+ questions | 45–70+ | 80–120+, until it converges |
+
+**Those numbers always carry a `+`, and it is not hedging.** The count is not a property of the level — it is
+a property of how much the person's answers spawn, which nobody can know in advance. One answer can open
+three new questions; another closes four. A mid-project interview at level 3 can run well past 100 and still
+be producing genuinely new material, and stopping it at a planned number would leave exactly the unknowns it
+was started to find. Never present the estimate as a target to hit or a budget to spend down.
 
 Whatever the level, **people can react even when they cannot generate** — so when someone stalls on an open
 question, turning it into two concrete options usually unsticks them immediately.
@@ -128,8 +161,13 @@ At that point, say so, show the progress table, and offer to move to the harvest
 it feels long, and do not continue on autopilot once it has converged. The user may also stop whenever they
 like — this is their document.
 
-**Every ten questions, show the progress table** (see `references/interview.md` for the format). It shows them
-where they are and it exposes an under-probed quadrant, which is otherwise invisible from the inside.
+**Every ten questions, without being asked, show two things:** the progress table, and a **rough estimate of
+how many questions remain**, derived from the spawn rate rather than guessed. The arithmetic and the table
+format are both in `references/interview.md`.
+
+Do this unprompted, because a long interview with no visible horizon feels endless even when it is going
+well. The table also exposes an under-probed quadrant, which is invisible from the inside — a quadrant that
+has stopped producing looks identical whether it is finished or being neglected.
 
 The four quadrants, how to recognise each, the table format, and the full worked technique are in
 **`references/interview.md`** — read it before the first question.

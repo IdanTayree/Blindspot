@@ -61,9 +61,58 @@ Common collision seams, useful to check against:
 A collision is not a gotcha. Present it as a design fork with real consequences on both sides, and the user
 usually produces a third option better than either — that is the point of the exercise.
 
-## The progress table
+## Entering a project that already exists
 
-Show this every ten questions, and at the end. It is what makes coverage falsifiable.
+The more common case, and the more valuable one: someone with code, docs and momentum who says the project
+was never planned properly, is full of gaps, or that they can no longer tell what has actually been decided.
+By the time anyone notices, the gaps are load-bearing.
+
+The method does not change. The opening does.
+
+### Read before asking
+
+Their README, plan documents, ADRs, issue tracker, directory layout, recent commits. Whatever exists.
+
+This is not optional politeness. An audit that opens by asking things already written in their repo spends
+the user's patience on work they have already done, and they answer more shallowly for the rest of the
+interview — which costs exactly the depth the audit was for.
+
+### Populate the blueprint from the artefacts, with provenance
+
+Fill the known-knowns from what you read, and mark each entry **from your docs** or **from you**. The
+distinction earns its keep quickly: a decision written in a document nobody has revisited in six months is
+not the same as one they confirmed a minute ago, and the gap between those two is frequently the thing they
+came to find.
+
+Where an artefact and the person contradict each other, that is not an error to resolve quietly — it is a
+finding. Show both and ask which is true now.
+
+### Open with a collision, not with a question
+
+The single highest-yield move available on an existing project. Decisions made months apart contradict each
+other constantly, because nobody has ever put them side by side — and the person is far too close to the
+project to see it. Run the collision pass over what already exists *before* asking anything new, and open
+with the sharpest one you find.
+
+It also establishes immediately that this is not a form to fill in.
+
+### Name the untouched areas out loud
+
+What does a project of this shape normally have to decide that theirs never has? List them plainly. That list
+is usually the reason they came, and seeing it written down is often the most valuable single message in the
+interview.
+
+### Expect it to run longer
+
+Longer than from-scratch, not shorter. An existing project brings its own contradictions with it, and every
+document you read raises questions a blank page never would. Say so early, so the length reads as thoroughness
+rather than drift.
+
+## The progress table, every ten questions
+
+Show this **unprompted, every ten answers**, and again at the end. Two reasons: a long interview with no
+visible horizon feels endless even when it is going well, and a quadrant that has quietly stopped producing
+looks exactly like a finished one from the inside.
 
 ```markdown
 | Quadrant | Entries | How they were found | Still producing? |
@@ -74,11 +123,36 @@ Show this every ten questions, and at the end. It is what makes coverage falsifi
 | Unknown unknowns | 6 | collisions between their answers | yes, rate halved |
 ```
 
-Then state the **spawn rate** — new open questions per answer over the last ten — and the estimate that
-follows from it. Early on, roughly one per answer. Converged is below one per three.
+Alongside it, always give:
 
-Also list, explicitly, **areas nothing has touched yet**. A coverage claim nobody can check is worth nothing,
-and naming the gaps is how the user spots the one that matters to them.
+- **The spawn rate** — new open questions per answer over the last ten. Early on, roughly one. Converged is
+  below one per three (below one per two at level 1).
+- **Areas nothing has touched yet**, named explicitly. A coverage claim nobody can check is worth nothing,
+  and this list is how the user spots the gap that matters to them.
+- **A rough estimate of what remains**, computed as below.
+
+### Estimating what remains
+
+Do not guess this, and do not quote the level's rough length back at them — by question 20 you have real data
+about *this* interview.
+
+```
+direct    = open questions on the list + (untouched areas × ~3 questions each)
+spawn (s) = new open questions per answer, over the last ten
+remaining ≈ direct ÷ (1 − s)          # when s < 1
+```
+
+The division is the part people skip. Each answer spawns roughly `s` further questions, and those spawn more
+in turn, so the true remaining count is the geometric sum — not the count of questions currently on the list.
+At `s = 0.5`, fifteen open questions actually mean about **thirty** more. When `s` is close to 1, the idea is
+still expanding and no meaningful estimate exists; say that instead of inventing a number.
+
+**Always express it as a range with a `+`** — "roughly 20–30+ more" — and say what would change it. The count
+is a property of how much their answers spawn, not of the project, and a number stated flatly becomes a
+target they start answering *towards*, which is the opposite of what this is for.
+
+Revise it openly when it moves. An estimate that halves because the interview converged is useful
+information; an estimate silently held constant is not.
 
 ## The blueprint file
 
@@ -138,7 +212,7 @@ failing. Everything here protects against that.
   assumption, and move on. They cannot choose between Postgres and SQLite, and asking teaches them nothing.
 - **Collisions are raised gently**, one side at a time: *"Earlier you said nobody should need an account.
   This part needs to know who someone is to save their bookings. Which matters more?"*
-- **Stop earlier** — around 12–18 questions, or once the spawn rate drops below one new question per two
+- **Stop earlier** — typically 20–35+ questions, or once the spawn rate drops below one new question per two
   answers. Past that, the remaining questions are decisions they have no basis to make, and a bad answer is
   worse than a written assumption.
 
@@ -159,7 +233,7 @@ engine is.
 - **Depth stops at broad shape**: local or hosted, web or native, who pays, what happens offline. Not
   library selection — that is what the harvest is for.
 - **Collisions raised plainly**, both sides at once, as a fork with consequences.
-- Typically 25–40 questions.
+- Typically 45–70+ questions.
 
 ### Level 3 — pro
 
@@ -173,7 +247,7 @@ They know the stack and will find hand-holding irritating.
 - **Chase collisions hard**, and say plainly when two answers cannot both hold. A pro will usually produce a
   third option better than either side of the fork — that is the single highest-value moment in the method.
 - **Correct false premises directly and briefly.** At this level they would rather be told than humoured.
-- 40+ questions, until the spawn rate genuinely converges.
+- 80–120+ questions, until the spawn rate genuinely converges — and materially more when the project already exists, since every artefact read raises questions a blank page never would. A pro-level interview on a half-planned project passing 100 questions and still producing new material is normal, not a sign something has gone wrong.
 
 ## Tone
 

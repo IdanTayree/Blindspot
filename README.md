@@ -4,7 +4,15 @@ A Claude skill that turns one sentence into something you can actually build.
 
 You arrive with *"an app that helps dog walkers find clients."* A plan written straight from that sentence is
 fiction — every decision that matters gets made by whoever writes it, not by the person who has to live with
-it. This skill replaces that with two phases:
+it.
+
+It works equally from the other end: **a project already underway** that was never planned properly and is
+full of gaps. That case is more common, and more valuable, because by the time anyone notices the gaps they
+are load-bearing. The skill reads what already exists first — README, plan docs, issues, layout, commits —
+fills the blueprint from those artefacts marked *from your docs* rather than *from you*, and then opens with a
+contradiction it found between two decisions made months apart. Nobody sees those from the inside.
+
+Either way, two phases:
 
 1. **Interview** — one question per message until the unknowns stop appearing, writing every answer to disk as
    it arrives.
@@ -46,9 +54,19 @@ about durability guarantees goes quiet, and an expert asked "phone or computer?"
 | Jargon | none | glossed in a clause | assumed |
 | Depth | what it does and who for | local or hosted, web or app, who pays | failure modes, concurrency, durability, licences |
 | Collisions | raised gently | raised plainly | chased hard |
-| Length | 12–18 questions | 25–40 | 40+ |
+| Rough length | 20–35+ | 45–70+ | 80–120+ |
 
 You can move between levels at any time by saying "simpler" or "go deeper".
+
+**The `+` is load-bearing.** The count is not a property of the level — it is a property of how much your
+answers spawn, which nobody can know in advance. One answer opens three new questions; another closes four.
+A pro-level interview on a half-planned project passing 100 questions and still producing new material is
+normal, not a sign of drift — and stopping at a planned number would leave exactly the unknowns it was
+started to find.
+
+Every ten questions it shows you, unprompted, a table of what has been found in each quadrant, which areas
+nothing has touched yet, and a re-estimate of how many questions remain — derived from the measured spawn
+rate rather than guessed, so it moves as the interview converges.
 
 Three other things it does deliberately:
 

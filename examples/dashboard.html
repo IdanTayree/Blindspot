@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Local assistant — component harvest</title>
+<!--
+  Template for build_dashboard.py. Placeholders are $-style (string.Template), so CSS braces need no
+  escaping and this file can be edited directly without touching Python.
+
+  Placeholders (each prefixed with a dollar sign in the markup below, and deliberately NOT written that way
+  here — a literal one in this comment would be substituted too, and the page would render twice):
+  title, subtitle, target, components, ranked, excluded, checked, chips, sections.
+
+  Deliberately a single dark theme rather than a light/dark pair — this is a dense technical page that gets
+  read for long stretches, and the palette was chosen to be lived in. Edit the tokens below to reskin it;
+  nothing outside :root hardcodes a colour.
+-->
+<style>
+:root {
+  --bg-primary:#0a0d14;
+  --bg-secondary:#121722;
+  --bg-card:rgba(22,29,44,.7);
+  --border-subtle:rgba(255,255,255,.08);
+  --border-accent:rgba(99,102,241,.3);
+  --accent-indigo:#6366f1;
+  --accent-cyan:#06b6d4;
+  --accent-emerald:#10b981;
+  --accent-amber:#f59e0b;
+  --accent-rose:#f43f5e;
+  --text-main:#f1f5f9;
+  --text-muted:#94a3b8;
+  --text-dim:#64748b;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px;
+  --shadow-card:0 10px 30px -10px rgba(0,0,0,.5);
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--bg-primary); color:var(--text-main);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.13), transparent);
+  background-repeat:no-repeat;
+}
+.wrap { max-width:1140px; margin:0 auto; padding:44px 22px 90px; }
+
+header.top { margin-bottom:26px; }
+h1 {
+  font-size:34px; margin:0 0 8px; letter-spacing:-.025em; text-wrap:balance;
+  background:linear-gradient(to right, #fff, var(--text-muted));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.sub { color:var(--text-muted); margin:0; font-size:14.5px; }
+.meta {
+  display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;
+}
+.stat-pill {
+  background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:var(--radius-sm);
+  padding:9px 14px; font-size:12.5px; color:var(--text-dim);
+}
+.stat-pill b { color:var(--text-main); font-size:15px; font-variant-numeric:tabular-nums; margin-right:5px; }
+
+.note {
+  background:rgba(99,102,241,.08); border:1px solid var(--border-accent);
+  border-radius:var(--radius-md); padding:14px 18px; margin:24px 0 28px;
+  font-size:13.5px; color:var(--text-muted);
+}
+.note b { color:var(--text-main); }
+
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+.chip {
+  font:inherit; font-size:12.5px; padding:6px 13px; cursor:pointer;
+  background:var(--bg-secondary); color:var(--text-muted);
+  border:1px solid var(--border-subtle); border-radius:999px;
+  transition:border-color .15s, color .15s;
+}
+.chip:hover { border-color:var(--border-accent); color:var(--text-main); }
+.chip:focus-visible { outline:2px solid var(--accent-indigo); outline-offset:2px; }
+.chip.on {
+  background:linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+  color:#fff; border-color:transparent;
+}
+
+.component {
+  background:var(--bg-card); border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg); padding:22px 24px; margin-bottom:18px;
+  box-shadow:var(--shadow-card);
+}
+.component > header {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 14px;
+  padding-bottom:14px; margin-bottom:6px; border-bottom:1px solid var(--border-subtle);
+}
+.component h2 { font-size:18.5px; margin:0; letter-spacing:-.015em; color:var(--text-main); }
+.job { margin:0; color:var(--text-dim); font-size:13.5px; flex:1 1 260px; }
+.depth {
+  font-size:11.5px; color:var(--accent-cyan); background:rgba(6,182,212,.1);
+  border:1px solid rgba(6,182,212,.25); padding:3px 10px; border-radius:999px; white-space:nowrap;
+}
+
+ol.cands { list-style:none; margin:0; padding:0; }
+.cand { display:flex; gap:15px; padding:16px 0; border-bottom:1px solid var(--border-subtle); }
+.cand:last-child { border-bottom:none; padding-bottom:0; }
+.rank {
+  flex:0 0 32px; height:32px; border-radius:50%; display:grid; place-items:center;
+  font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;
+  background:rgba(255,255,255,.06); color:var(--text-dim);
+  border:1px solid var(--border-subtle);
+}
+.cand:first-child .rank {
+  background:linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+  color:#fff; border-color:transparent;
+}
+.body { flex:1; min-width:0; }
+.name { font-family:var(--mono); font-size:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.name a { color:var(--text-main); text-decoration:none; border-bottom:1px solid var(--border-accent); }
+.name a:hover { color:var(--accent-indigo); border-bottom-color:var(--accent-indigo); }
+
+.facts { display:flex; flex-wrap:wrap; gap:7px 12px; align-items:center; margin:8px 0; font-size:12px; color:var(--text-dim); }
+.stat b { color:var(--text-main); font-variant-numeric:tabular-nums; }
+.badge { font-size:11px; padding:2.5px 9px; border-radius:999px; background:rgba(255,255,255,.06); color:var(--text-dim); border:1px solid var(--border-subtle); }
+.badge.active { background:rgba(16,185,129,.12); color:var(--accent-emerald); border-color:rgba(16,185,129,.25); }
+.badge.maintained { background:rgba(245,158,11,.12); color:var(--accent-amber); border-color:rgba(245,158,11,.25); }
+.badge.stale, .badge.bad { background:rgba(244,63,94,.12); color:var(--accent-rose); border-color:rgba(244,63,94,.28); }
+.badge.warn { background:rgba(245,158,11,.12); color:var(--accent-amber); border-color:rgba(245,158,11,.25); }
+.lang { font-family:var(--mono); font-size:11.5px; color:var(--text-dim); }
+
+.desc { margin:7px 0; font-size:13px; color:var(--text-muted); }
+.why, .promote, .fit { margin:6px 0; font-size:13px; color:var(--text-muted); }
+.fit { font-size:12.5px; color:var(--text-dim); }
+.why b { color:var(--accent-indigo); font-weight:600; }
+.promote b { color:var(--accent-cyan); font-weight:600; }
+.fit b { color:var(--text-muted); font-weight:600; }
+
+.excluded { margin-top:16px; border-top:1px dashed var(--border-subtle); padding-top:14px; }
+.excluded summary { cursor:pointer; font-size:12.5px; color:var(--accent-rose); }
+.excluded summary:focus-visible { outline:2px solid var(--accent-indigo); outline-offset:3px; }
+.excluded ul { margin:11px 0 0; padding-left:20px; font-size:12.5px; color:var(--text-dim); }
+.excluded li { margin-bottom:7px; }
+.excluded b { font-family:var(--mono); color:var(--text-muted); }
+
+footer { margin-top:38px; padding-top:20px; border-top:1px solid var(--border-subtle); font-size:12.5px; color:var(--text-dim); }
+</style></head><body><div class="wrap">
+
+<header class="top">
+  <h1>Local assistant — component harvest</h1>
+  <p class="sub">Ranked open-source candidates for each part the project has to build.</p>
+  <div class="meta">
+    <span class="stat-pill"><b>12</b> components</span>
+    <span class="stat-pill"><b>52</b> ranked candidates</span>
+    <span class="stat-pill"><b>9</b> excluded, with reasons</span>
+    <span class="stat-pill">verified <b>2026-08-14</b></span>
+  </div>
+</header>
+
+<p class="note"><b>Every number on this page was fetched from the GitHub API</b> on 2026-08-14 — stars, last
+push, licence and archived status. Nothing is recalled. Where GitHub reports no licence, this page says so
+rather than guessing, and a repository that has been renamed shows the slug it moved from.
+Target stack: Rust · desktop shell · local inference · Apple Silicon, local-first.</p>
+
+<div class="chips"><button class="chip on" data-filter="all">All</button>
+<button class="chip" data-filter="crew">Crew orchestration &amp; rounds</button>
+<button class="chip" data-filter="queue">Durable task queue</button>
+<button class="chip" data-filter="sandbox">Execution sandbox</button>
+<button class="chip" data-filter="guardrails">Guardrails &amp; admission control</button>
+<button class="chip" data-filter="skills">Skills library &amp; tool registry</button>
+<button class="chip" data-filter="wakeword">Wake word detection</button>
+<button class="chip" data-filter="screen">Screen &amp; GUI understanding</button>
+<button class="chip" data-filter="history">State snapshotting &amp; history</button>
+<button class="chip" data-filter="kanban">Roadmap &amp; Kanban UI</button>
+<button class="chip" data-filter="presence">Presence detection</button>
+<button class="chip" data-filter="stt">Speech to text</button>
+<button class="chip" data-filter="push">Push relay &amp; mobile sync</button></div>
+
+<section class="component" data-id="crew">
+          <header><h2>Crew orchestration &amp; rounds</h2>
+          <p class="job">Run a five-role crew in turns, with work able to travel backwards between rounds.</p>
+          <span class="depth">5 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/langchain-ai/langgraph" target="_blank" rel="noopener">langchain-ai/langgraph</a></div>
+      <div class="facts"><span class="stat"><b>39,663</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">Build resilient agents.</p>
+      <p class="why"><b>Why 1:</b> Cyclic state graphs with checkpointing and human-in-the-loop pause/resume — the closest existing match to rounds that can send work back.</p>
+      <p class="promote"><b>Promote when:</b> Stays first unless the crew turns out to need role personas more than explicit flow control.</p>
+      <p class="fit"><b>Fit:</b> Python. Sits beside the brain, not inside the Tauri core.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/crewAIInc/crewAI" target="_blank" rel="noopener">crewAIInc/crewAI</a></div>
+      <div class="facts"><span class="stat"><b>57,068</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">Framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks.</p>
+      <p class="why"><b>Why 2:</b> Far larger community and role-based crews out of the box, but flow control is implicit — sending work backwards means fighting the abstraction.</p>
+      <p class="promote"><b>Promote when:</b> Promote if you want personas and delegation for free and can live without an explicit state machine.</p>
+      <p class="fit"><b>Fit:</b> Python. Same placement as LangGraph.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/agno-agi/agno" target="_blank" rel="noopener">agno-agi/agno</a></div>
+      <div class="facts"><span class="stat"><b>41,704</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Python</span></div>
+      <p class="desc">Build, run, and manage agent platforms.</p>
+      <p class="why"><b>Why 3:</b> Fast and light, with much lower startup cost per agent — but fewer durable-state primitives, so a crashed round is harder to resume.</p>
+      <p class="promote"><b>Promote when:</b> Promote if agent spin-up latency becomes the bottleneck and rounds stay short.</p>
+      <p class="fit"><b>Fit:</b> Python. Good if the queue restarts agents often.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/pydantic/pydantic-ai" target="_blank" rel="noopener">pydantic/pydantic-ai</a></div>
+      <div class="facts"><span class="stat"><b>19,284</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">AI Agent Framework, the Pydantic way</p>
+      <p class="why"><b>Why 4:</b> Excellent typed tool-calling and structured output, but it is not a crew framework — you would build the rounds yourself.</p>
+      <p class="promote"><b>Promote when:</b> Promote if the real need turns out to be reliable structured tool calls rather than orchestration.</p>
+      <p class="fit"><b>Fit:</b> Python. Would pair with a hand-written scheduler.</p>
+    </div></li>
+<li class="cand"><div class="rank">5</div><div class="body">
+      <div class="name"><a href="https://github.com/microsoft/autogen" target="_blank" rel="noopener">microsoft/autogen</a></div>
+      <div class="facts"><span class="stat"><b>60,416</b> stars</span>
+        <span class="badge maintained">maintained · 2026-04-15</span><span class="badge ">CC-BY-4.0</span><span class="lang">Python</span></div>
+      <p class="desc">A programming framework for agentic AI</p>
+      <p class="why"><b>Why 5:</b> Large and well known, but momentum slowed (last push April) and it carries CC-BY-4.0, a content licence that is an odd fit for shipped code.</p>
+      <p class="promote"><b>Promote when:</b> Promote only if a specific conversation pattern here is otherwise unavailable — and read the licence first.</p>
+      <p class="fit"><b>Fit:</b> Python. Licence needs legal review before shipping.</p>
+    </div></li></ol><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>openai/swarm</b> — Experimental and superseded by OpenAI&#x27;s agents SDK; last push April 2026.</li></ul></details></section>
+<section class="component" data-id="queue">
+          <header><h2>Durable task queue</h2>
+          <p class="job">One global queue across projects, ordered by position, urgency and priority, surviving a 3am reboot.</p>
+          <span class="depth">5 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/hatchet-dev/hatchet" target="_blank" rel="noopener">hatchet-dev/hatchet</a></div>
+      <div class="facts"><span class="stat"><b>7,720</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">MIT</span><span class="lang">Go</span></div>
+      <p class="desc">🪓 An orchestration engine for background tasks, AI agents, and durable workflows</p>
+      <p class="why"><b>Why 1:</b> Built for agent workloads specifically: durable step-level state, automatic retries and live stream telemetry — which is what the cockpit&#x27;s progress view needs.</p>
+      <p class="promote"><b>Promote when:</b> Stays first unless you decide the queue must live in-process rather than as a service.</p>
+      <p class="fit"><b>Fit:</b> Go service + Python/TS clients. Runs alongside the brain.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/temporalio/temporal" target="_blank" rel="noopener">temporalio/temporal</a></div>
+      <div class="facts"><span class="stat"><b>22,306</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">MIT</span><span class="lang">Go</span></div>
+      <p class="desc">Temporal service</p>
+      <p class="why"><b>Why 2:</b> The most battle-tested durable execution engine here, but it is a cluster — heavy for a single laptop that also has to run two models.</p>
+      <p class="promote"><b>Promote when:</b> Promote if the queue ever spans more than one machine.</p>
+      <p class="fit"><b>Fit:</b> Go. Meaningful resource cost on a shared laptop.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/apalis-dev/apalis" target="_blank" rel="noopener">apalis-dev/apalis</a></div>
+      <div class="facts"><span class="stat"><b>1,355</b> stars</span>
+        <span class="badge active">active · 2026-07-25</span><span class="badge ">MIT</span><span class="lang">Rust</span></div>
+      <p class="desc">Type-safe, extensible, and high-performance background processing library for Rust</p>
+      <p class="why"><b>Why 3:</b> The best architectural fit — native Rust, embeds directly in the Tauri process, no extra service. Smallest ecosystem of the five, so more will be hand-built.</p>
+      <p class="promote"><b>Promote when:</b> Promote if you want zero extra processes and are willing to write the retry and priority logic yourself.</p>
+      <p class="fit"><b>Fit:</b> Rust. Lives inside the Tauri core.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/riverqueue/river" target="_blank" rel="noopener">riverqueue/river</a></div>
+      <div class="facts"><span class="stat"><b>5,563</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">MPL-2.0</span><span class="lang">Go</span></div>
+      <p class="desc">Fast and reliable background jobs in Go</p>
+      <p class="why"><b>Why 4:</b> Clean and reliable, but Postgres-only — which means running Postgres purely to hold a local queue.</p>
+      <p class="promote"><b>Promote when:</b> Promote if Postgres is already a hard dependency for other reasons.</p>
+      <p class="fit"><b>Fit:</b> Go + Postgres. Adds a database to the local stack.</p>
+    </div></li>
+<li class="cand"><div class="rank">5</div><div class="body">
+      <div class="name"><a href="https://github.com/dbos-inc/dbos-transact-py" target="_blank" rel="noopener">dbos-inc/dbos-transact-py</a></div>
+      <div class="facts"><span class="stat"><b>1,527</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">Database-Backed Durable Python Workflows</p>
+      <p class="why"><b>Why 5:</b> Durable workflows as plain Python decorators, very low ceremony — but young, and the smallest community here.</p>
+      <p class="promote"><b>Promote when:</b> Promote if the brain stays Python-centric and the queue never needs to be reached from Rust.</p>
+      <p class="fit"><b>Fit:</b> Python. Would sit in the brain process.</p>
+    </div></li></ol></section>
+<section class="component" data-id="sandbox">
+          <header><h2>Execution sandbox</h2>
+          <p class="job">Run untrusted package installs and third-party code without reaching the rest of the machine.</p>
+          <span class="depth">6 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/apple/container" target="_blank" rel="noopener">apple/container</a></div>
+      <div class="facts"><span class="stat"><b>48,942</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Swift</span></div>
+      <p class="desc">A tool for creating and running Linux containers using lightweight virtual machines on a Mac. It is written in Swift, and optimized for Apple silicon. </p>
+      <p class="why"><b>Why 1:</b> Apple&#x27;s own tool, running Linux containers as lightweight VMs on Apple Silicon — a real kernel boundary, native to the target platform, no third-party runtime.</p>
+      <p class="promote"><b>Promote when:</b> Stays first for anything needing a strong boundary on this hardware.</p>
+      <p class="fit"><b>Fit:</b> Swift, macOS 26+, Apple Silicon. Native fit.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/lima-vm/lima" target="_blank" rel="noopener">lima-vm/lima</a></div>
+      <div class="facts"><span class="stat"><b>21,676</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">Apache-2.0</span><span class="lang">Go</span></div>
+      <p class="desc">Linux virtual machines, with a focus on running containers</p>
+      <p class="why"><b>Why 2:</b> Mature and scriptable Linux VMs on macOS, more configurable than Apple&#x27;s tool — but a heavier install and slower to start.</p>
+      <p class="promote"><b>Promote when:</b> Promote if you need fine control over the VM, or support for macOS versions Apple&#x27;s container does not cover.</p>
+      <p class="fit"><b>Fit:</b> Go. Works on Apple Silicon, extra install.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/abiosoft/colima" target="_blank" rel="noopener">abiosoft/colima</a></div>
+      <div class="facts"><span class="stat"><b>30,357</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">MIT</span><span class="lang">Go</span></div>
+      <p class="desc">Container runtimes on macOS (and Linux) with minimal setup</p>
+      <p class="why"><b>Why 3:</b> Docker-compatible on macOS with almost no setup, so existing container tooling just works.</p>
+      <p class="promote"><b>Promote when:</b> Promote if the project ends up needing Docker CLI compatibility specifically.</p>
+      <p class="fit"><b>Fit:</b> Go, wraps Lima. Extra install.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/e2b-dev/E2B" target="_blank" rel="noopener">e2b-dev/E2B</a></div>
+      <div class="facts"><span class="stat"><b>13,392</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">Apache-2.0</span><span class="lang">Python</span></div>
+      <p class="desc">Open-source, secure environment with real-world tools for enterprise-grade agents.</p>
+      <p class="why"><b>Why 4:</b> Purpose-built for AI agent code execution with excellent streaming APIs — but it is a hosted service, so code and files leave the machine.</p>
+      <p class="promote"><b>Promote when:</b> Promote only for a project explicitly allowed to use cloud execution.</p>
+      <p class="fit"><b>Fit:</b> Hosted microVMs. Conflicts with local-first unless self-hosted.</p>
+    </div></li>
+<li class="cand"><div class="rank">5</div><div class="body">
+      <div class="name"><a href="https://github.com/firecracker-microvm/firecracker" target="_blank" rel="noopener">firecracker-microvm/firecracker</a></div>
+      <div class="facts"><span class="stat"><b>36,049</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">Apache-2.0</span><span class="lang">Rust</span></div>
+      <p class="desc">Secure and fast microVMs for serverless computing.</p>
+      <p class="why"><b>Why 5:</b> The microVM technology underneath most agent sandboxes, and written in Rust — but it needs Linux and KVM, so it cannot run directly on macOS.</p>
+      <p class="promote"><b>Promote when:</b> Promote if the project ever runs on a Linux host.</p>
+      <p class="fit"><b>Fit:</b> Rust, Linux/KVM only. Not runnable on this Mac.</p>
+    </div></li>
+<li class="cand"><div class="rank">6</div><div class="body">
+      <div class="name"><a href="https://github.com/google/gvisor" target="_blank" rel="noopener">google/gvisor</a></div>
+      <div class="facts"><span class="stat"><b>19,078</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Go</span></div>
+      <p class="desc">Application Kernel for Containers</p>
+      <p class="why"><b>Why 6:</b> Strong syscall-level isolation, but Linux-only and operationally complex.</p>
+      <p class="promote"><b>Promote when:</b> Promote only on a Linux deployment with a hard multi-tenant requirement.</p>
+      <p class="fit"><b>Fit:</b> Go, Linux only.</p>
+    </div></li></ol><details class="excluded"><summary>Excluded — 2</summary><ul><li><b>containers/bubblewrap</b> — Linux namespaces — cannot run on macOS at all. It was the previous dashboard&#x27;s recommendation for this component.</li>
+<li><b>macOS Seatbelt (sandbox-exec)</b> — Not a repository: it ships with macOS. Still the cheapest real boundary for a local process, and the intended floor here.</li></ul></details></section>
+<section class="component" data-id="guardrails">
+          <header><h2>Guardrails &amp; admission control</h2>
+          <p class="job">Constrain what a model may do, and refuse requests that fall outside policy.</p>
+          <span class="depth">4 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/NVIDIA-NeMo/Guardrails" target="_blank" rel="noopener">NVIDIA-NeMo/Guardrails</a></div>
+      <div class="facts"><span class="stat"><b>6,944</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge warn">no licence detected</span><span class="lang">Python</span></div>
+      <p class="desc">NeMo Guardrails is an open-source toolkit for easily adding programmable guardrails to LLM-based conversational systems.</p>
+      <p class="why"><b>Why 1:</b> Programmable rails with a dedicated policy language, and the most complete dialogue-level controls — but GitHub detects no licence file, which needs resolving before shipping.</p>
+      <p class="promote"><b>Promote when:</b> Stays first if the licence checks out; drops immediately if it does not.</p>
+      <p class="fit"><b>Fit:</b> Python. Licence unresolved — verify before adopting.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/guardrails-ai/guardrails" target="_blank" rel="noopener">guardrails-ai/guardrails</a></div>
+      <div class="facts"><span class="stat"><b>7,283</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Python</span></div>
+      <p class="desc">Adding guardrails to large language models.</p>
+      <p class="why"><b>Why 2:</b> Clear Apache-2.0 licence and good output validators, but weaker at conversation-level policy than NeMo.</p>
+      <p class="promote"><b>Promote when:</b> Promote the moment licence certainty matters more than policy depth — which for a project going public, it probably does.</p>
+      <p class="fit"><b>Fit:</b> Python. Clean licence, safe default.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/data-privacy-stack/presidio" target="_blank" rel="noopener">data-privacy-stack/presidio</a><span class="badge warn">moved from microsoft/presidio</span></div>
+      <div class="facts"><span class="stat"><b>10,477</b> stars</span>
+        <span class="badge active">active · 2026-08-11</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">An open-source framework for detecting, redacting, masking, and anonymizing sensitive data (PII) across text, images, and structured data. Supports NLP, pattern matching, and customizable pipelines.</p>
+      <p class="why"><b>Why 3:</b> Not a rails engine at all — it detects and redacts personal data, which is the other half of the admission problem and the only candidate here that serves the screen-capture redaction requirement directly.</p>
+      <p class="promote"><b>Promote when:</b> Promote to first if the real risk turns out to be personal data leaving in a payload rather than a model doing something it should not.</p>
+      <p class="fit"><b>Fit:</b> Python, MIT, clean licence. Note it moved from `microsoft/presidio`.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/NVIDIA/garak" target="_blank" rel="noopener">NVIDIA/garak</a></div>
+      <div class="facts"><span class="stat"><b>8,795</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">Apache-2.0</span><span class="lang">Python</span></div>
+      <p class="desc">the LLM vulnerability scanner</p>
+      <p class="why"><b>Why 4:</b> A vulnerability scanner rather than a guard: it finds the holes instead of closing them, so it complements the rails above rather than replacing them.</p>
+      <p class="promote"><b>Promote when:</b> Use alongside whichever rails ship, to test that they actually hold.</p>
+      <p class="fit"><b>Fit:</b> Python, Apache-2.0. Testing tool, not a runtime dependency.</p>
+    </div></li></ol><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>protectai/llm-guard</b> — ARCHIVED. Looks healthy at a glance — 3.2k stars, pushed July 2026 — but the repository is archived and will not receive fixes.</li></ul></details></section>
+<section class="component" data-id="skills">
+          <header><h2>Skills library &amp; tool registry</h2>
+          <p class="job">A library of skill files and tools that agents invoke at run time.</p>
+          <span class="depth">5 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/modelcontextprotocol/rust-sdk" target="_blank" rel="noopener">modelcontextprotocol/rust-sdk</a></div>
+      <div class="facts"><span class="stat"><b>3,800</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge warn">no licence detected</span><span class="lang">Rust</span></div>
+      <p class="desc">The official Rust SDK for the Model Context Protocol</p>
+      <p class="why"><b>Why 1:</b> Matches the Tauri core&#x27;s language, so tool registration lives in the same process as the bridge. Smallest of the SDKs, and GitHub detects no licence file.</p>
+      <p class="promote"><b>Promote when:</b> Stays first for anything registered inside the Rust core; check the licence before shipping.</p>
+      <p class="fit"><b>Fit:</b> Rust. Native fit for the Tauri side.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/modelcontextprotocol/python-sdk" target="_blank" rel="noopener">modelcontextprotocol/python-sdk</a></div>
+      <div class="facts"><span class="stat"><b>24,002</b> stars</span>
+        <span class="badge active">active · 2026-08-12</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">The official Python SDK for Model Context Protocol servers and clients</p>
+      <p class="why"><b>Why 2:</b> The most complete SDK with a clear MIT licence, and the brain is already Python — but it puts tool hosting in the brain rather than the core.</p>
+      <p class="promote"><b>Promote when:</b> Promote if tools should live with the brain instead of the shell.</p>
+      <p class="fit"><b>Fit:</b> Python. Fits the existing brain process.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener">modelcontextprotocol/servers</a></div>
+      <div class="facts"><span class="stat"><b>89,557</b> stars</span>
+        <span class="badge active">active · 2026-08-10</span><span class="badge warn">no licence detected</span><span class="lang">TypeScript</span></div>
+      <p class="desc">Model Context Protocol Servers</p>
+      <p class="why"><b>Why 3:</b> The reference server collection — the fastest way to get working tools — but it is examples rather than a library, and no licence is detected at repo level.</p>
+      <p class="promote"><b>Promote when:</b> Promote as a source of implementations to read, not as a dependency.</p>
+      <p class="fit"><b>Fit:</b> TypeScript/Python. Reference material.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/punkpeye/awesome-mcp-servers" target="_blank" rel="noopener">punkpeye/awesome-mcp-servers</a></div>
+      <div class="facts"><span class="stat"><b>92,289</b> stars</span>
+        <span class="badge active">active · 2026-08-03</span><span class="badge ">MIT</span><span class="lang">—</span></div>
+      <p class="desc">A collection of MCP servers.</p>
+      <p class="why"><b>Why 4:</b> The largest directory of available servers, invaluable for discovery — but it is a list, not code.</p>
+      <p class="promote"><b>Promote when:</b> Never promotes to a dependency; use it to find candidates.</p>
+      <p class="fit"><b>Fit:</b> Directory. Discovery only.</p>
+    </div></li>
+<li class="cand"><div class="rank">5</div><div class="body">
+      <div class="name"><a href="https://github.com/aaif-goose/goose" target="_blank" rel="noopener">aaif-goose/goose</a></div>
+      <div class="facts"><span class="stat"><b>52,791</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Rust</span></div>
+      <p class="desc">an open source, extensible AI agent that goes beyond code suggestions - install, execute, edit, and test with any LLM</p>
+      <p class="why"><b>Why 5:</b> A complete Rust agent with an extension system worth reading closely — and it moved: `block/goose` now redirects here.</p>
+      <p class="promote"><b>Promote when:</b> Promote if you want a whole extension architecture to adapt rather than a protocol SDK.</p>
+      <p class="fit"><b>Fit:</b> Rust, Apache-2.0. Note the org rename.</p>
+    </div></li></ol></section>
+<section class="component" data-id="wakeword">
+          <header><h2>Wake word detection</h2>
+          <p class="job">Detect the summon word locally, with no audio leaving the machine until it fires.</p>
+          <span class="depth">4 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/dscripka/openWakeWord" target="_blank" rel="noopener">dscripka/openWakeWord</a></div>
+      <div class="facts"><span class="stat"><b>2,662</b> stars</span>
+        <span class="badge maintained">maintained · 2025-12-30</span><span class="badge ">Apache-2.0</span><span class="lang">Jupyter Notebook</span></div>
+      <p class="desc">An open-source audio wake word (or phrase) detection framework with a focus on performance and simplicity.</p>
+      <p class="why"><b>Why 1:</b> Fully open, trains custom wake words, runs entirely offline with no key or service — the only candidate that meets the local-first requirement outright.</p>
+      <p class="promote"><b>Promote when:</b> Stays first unless detection accuracy proves unusable in practice.</p>
+      <p class="fit"><b>Fit:</b> Python/ONNX. Runs local; needs a Rust or Swift binding for the shell.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/Picovoice/porcupine" target="_blank" rel="noopener">Picovoice/porcupine</a></div>
+      <div class="facts"><span class="stat"><b>4,911</b> stars</span>
+        <span class="badge active">active · 2026-08-12</span><span class="badge ">Apache-2.0</span><span class="lang">Python</span></div>
+      <p class="desc">On-device wake word detection powered by deep learning</p>
+      <p class="why"><b>Why 2:</b> The best accuracy and the lowest CPU cost by a distance, with real Apple Silicon support — but the models are commercially licensed and gated behind an access key, which conflicts with shipping an open project.</p>
+      <p class="promote"><b>Promote when:</b> Promote if accuracy turns out to matter more than licence purity, and only for personal use.</p>
+      <p class="fit"><b>Fit:</b> Multi-platform. Licence conflicts with an open release.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/alphacep/vosk-api" target="_blank" rel="noopener">alphacep/vosk-api</a></div>
+      <div class="facts"><span class="stat"><b>15,056</b> stars</span>
+        <span class="badge active">active · 2026-08-09</span><span class="badge ">Apache-2.0</span><span class="lang">Jupyter Notebook</span></div>
+      <p class="desc">Offline speech recognition API for Android, iOS, Raspberry Pi and servers with Python, Java, C# and Node</p>
+      <p class="why"><b>Why 3:</b> Offline recognition with keyword spotting, so one engine could cover both the summon word and dictation — heavier than a dedicated detector, and it has to stay resident to listen.</p>
+      <p class="promote"><b>Promote when:</b> Promote if running one always-on engine beats running a detector plus a separate transcriber.</p>
+      <p class="fit"><b>Fit:</b> C++/Python bindings, Apache-2.0. Runs local; heavier idle cost.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/rhasspy/wyoming-openwakeword" target="_blank" rel="noopener">rhasspy/wyoming-openwakeword</a></div>
+      <div class="facts"><span class="stat"><b>203</b> stars</span>
+        <span class="badge maintained">maintained · 2025-10-30</span><span class="badge ">Apache-2.0</span><span class="lang">Python</span></div>
+      <p class="desc">Wyoming protocol server for openWakeWord wake word detection system</p>
+      <p class="why"><b>Why 4:</b> A service wrapper around openWakeWord with a clean protocol, which removes the binding work — but it is small, and adds a process to supervise.</p>
+      <p class="promote"><b>Promote when:</b> Promote if you would rather speak to a local service than embed a Python model in the shell.</p>
+      <p class="fit"><b>Fit:</b> Python, Apache-2.0. Adds a supervised process.</p>
+    </div></li></ol><details class="excluded"><summary>Excluded — 3</summary><ul><li><b>MycroftAI/mycroft-precise</b> — Last pushed November 2023 — effectively abandoned, and the parent project shut down.</li>
+<li><b>kahrendt/microWakeWord</b> — The slug resolves to a 4-star repository, which does not match the known project — treat as unverified and search again before considering it.</li>
+<li><b>Kitt-AI/snowboy</b> — Last pushed October 2021 and the company shut down; the hosted training service it depended on is gone.</li></ul></details></section>
+<section class="component" data-id="screen">
+          <header><h2>Screen &amp; GUI understanding</h2>
+          <p class="job">Answer &quot;what am I looking at&quot;, and learn from a video he is watching.</p>
+          <span class="depth">4 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/screenpipe/screenpipe" target="_blank" rel="noopener">screenpipe/screenpipe</a></div>
+      <div class="facts"><span class="stat"><b>20,950</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge warn">no licence detected</span><span class="lang">Rust</span></div>
+      <p class="desc">YC (S26) | Record your screen 24/7 and plug into your agents. Local, private, secure. Connect to OpenClaw, Hermes agent and 100+ apps</p>
+      <p class="why"><b>Why 1:</b> Continuous screen capture with local search and indexing, written in Rust and built for macOS — the closest thing to the requirement, and it moved from `mediar-ai/screenpipe`.</p>
+      <p class="promote"><b>Promote when:</b> Stays first for the always-available screen context; no licence detected, so verify before shipping.</p>
+      <p class="fit"><b>Fit:</b> Rust, macOS-native. Licence unresolved.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/microsoft/OmniParser" target="_blank" rel="noopener">microsoft/OmniParser</a></div>
+      <div class="facts"><span class="stat"><b>25,256</b> stars</span>
+        <span class="badge active">active · 2026-07-20</span><span class="badge ">CC-BY-4.0</span><span class="lang">Jupyter Notebook</span></div>
+      <p class="desc">A simple screen parsing tool towards pure vision based GUI agent</p>
+      <p class="why"><b>Why 2:</b> Turns a screenshot into structured UI elements, which is what makes a VLM&#x27;s answer about a screen precise rather than vague — but CC-BY-4.0 is a content licence and needs review.</p>
+      <p class="promote"><b>Promote when:</b> Promote when the task shifts from &#x27;describe my screen&#x27; to &#x27;act on my screen&#x27;.</p>
+      <p class="fit"><b>Fit:</b> Python model. Licence needs review.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/OpenAdaptAI/OpenAdapt" target="_blank" rel="noopener">OpenAdaptAI/OpenAdapt</a></div>
+      <div class="facts"><span class="stat"><b>1,681</b> stars</span>
+        <span class="badge active">active · 2026-08-12</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">Compile a demonstrated GUI workflow into a deterministic, locally executable program. Zero model calls on healthy runs; governed repair; halts instead of guessing. Launcher for openadapt-flow: pip install openadapt</p>
+      <p class="why"><b>Why 3:</b> Records screen, mouse and keyboard together to learn workflows — closest to &#x27;watch me and help me do that&#x27;, but much smaller and less mature.</p>
+      <p class="promote"><b>Promote when:</b> Promote if demonstration-by-example becomes a real feature rather than a curiosity.</p>
+      <p class="fit"><b>Fit:</b> Python, MIT. Smallest community here.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/browser-use/browser-use" target="_blank" rel="noopener">browser-use/browser-use</a></div>
+      <div class="facts"><span class="stat"><b>109,167</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">🌐 Make websites accessible for AI agents. Automate tasks online with ease.</p>
+      <p class="why"><b>Why 4:</b> By far the most active project in this set, and excellent — but it drives a browser, not the screen, so it answers a narrower question than the one asked.</p>
+      <p class="promote"><b>Promote when:</b> Promote for anything specifically about web pages rather than the whole desktop.</p>
+      <p class="fit"><b>Fit:</b> Python, MIT. Browser only.</p>
+    </div></li></ol></section>
+<section class="component" data-id="history">
+          <header><h2>State snapshotting &amp; history</h2>
+          <p class="job">A hidden version history from the first file written, so any overnight decision can be undone.</p>
+          <span class="depth">5 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/GitoxideLabs/gitoxide" target="_blank" rel="noopener">GitoxideLabs/gitoxide</a></div>
+      <div class="facts"><span class="stat"><b>11,774</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Rust</span></div>
+      <p class="desc">An idiomatic, lean, fast &amp; safe pure Rust implementation of Git</p>
+      <p class="why"><b>Why 1:</b> A pure-Rust git implementation that embeds directly in the Tauri core — no shelling out, no git binary dependency, and it moved from `Byron/gitoxide`.</p>
+      <p class="promote"><b>Promote when:</b> Stays first for history written from inside the app.</p>
+      <p class="fit"><b>Fit:</b> Rust, Apache-2.0. Native fit.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/jj-vcs/jj" target="_blank" rel="noopener">jj-vcs/jj</a></div>
+      <div class="facts"><span class="stat"><b>30,976</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">Apache-2.0</span><span class="lang">Rust</span></div>
+      <p class="desc">A Git-compatible VCS that is both simple and powerful</p>
+      <p class="why"><b>Why 2:</b> Snapshots the working copy automatically without anyone writing commit logic — arguably a better conceptual match for an invisible safety history than git itself.</p>
+      <p class="promote"><b>Promote when:</b> Promote if automatic snapshots matter more than embedding, and running a binary is acceptable.</p>
+      <p class="fit"><b>Fit:</b> Rust binary, Apache-2.0. Invoked, not embedded.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/libgit2/libgit2" target="_blank" rel="noopener">libgit2/libgit2</a></div>
+      <div class="facts"><span class="stat"><b>10,559</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge warn">no licence detected</span><span class="lang">C</span></div>
+      <p class="desc">A cross-platform, linkable library implementation of Git that you can use in your application.</p>
+      <p class="why"><b>Why 3:</b> The most mature and complete git library anywhere, but it is C — FFI, and no licence detected at repo level (it is GPL-2.0 with a linking exception, which needs reading).</p>
+      <p class="promote"><b>Promote when:</b> Promote if gitoxide turns out to be missing an operation you need.</p>
+      <p class="fit"><b>Fit:</b> C. FFI plus a licence to read carefully.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/isomorphic-git/isomorphic-git" target="_blank" rel="noopener">isomorphic-git/isomorphic-git</a></div>
+      <div class="facts"><span class="stat"><b>8,323</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">MIT</span><span class="lang">JavaScript</span></div>
+      <p class="desc">A pure JavaScript implementation of git for node and browsers!</p>
+      <p class="why"><b>Why 4:</b> Pure JavaScript git, already patched and in use in this project&#x27;s dependency tree — but it belongs to the front end, not the core.</p>
+      <p class="promote"><b>Promote when:</b> Promote for anything the web layer must do without the Rust side.</p>
+      <p class="fit"><b>Fit:</b> JavaScript, MIT. Already present in the repo.</p>
+    </div></li>
+<li class="cand"><div class="rank">5</div><div class="body">
+      <div class="name"><a href="https://github.com/restic/restic" target="_blank" rel="noopener">restic/restic</a></div>
+      <div class="facts"><span class="stat"><b>35,504</b> stars</span>
+        <span class="badge active">active · 2026-08-01</span><span class="badge ">BSD-2-Clause</span><span class="lang">Go</span></div>
+      <p class="desc">Fast, secure, efficient backup program</p>
+      <p class="why"><b>Why 5:</b> Excellent deduplicating backups, but a backup is not a history — it cannot answer &quot;undo the decision made at 3am&quot;.</p>
+      <p class="promote"><b>Promote when:</b> Promote for protecting the projects folder as a whole, alongside a real history rather than instead of one.</p>
+      <p class="fit"><b>Fit:</b> Go binary. Complementary, not a substitute.</p>
+    </div></li></ol></section>
+<section class="component" data-id="kanban">
+          <header><h2>Roadmap &amp; Kanban UI</h2>
+          <p class="job">A cockpit with a roadmap and to-do lists, at project level and across all projects.</p>
+          <span class="depth">4 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/clauderic/dnd-kit" target="_blank" rel="noopener">clauderic/dnd-kit</a></div>
+      <div class="facts"><span class="stat"><b>17,536</b> stars</span>
+        <span class="badge active">active · 2026-07-13</span><span class="badge ">MIT</span><span class="lang">TypeScript</span></div>
+      <p class="desc">The modern toolkit for building drag and drop interfaces</p>
+      <p class="why"><b>Why 1:</b> The drag-and-drop primitive for React, accessible and unopinionated — you build the cockpit you designed rather than adopting someone else&#x27;s board.</p>
+      <p class="promote"><b>Promote when:</b> Stays first while the cockpit is a bespoke surface.</p>
+      <p class="fit"><b>Fit:</b> TypeScript/React, MIT. Drops into the existing shell.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/SortableJS/Sortable" target="_blank" rel="noopener">SortableJS/Sortable</a></div>
+      <div class="facts"><span class="stat"><b>31,165</b> stars</span>
+        <span class="badge maintained">maintained · 2026-03-24</span><span class="badge ">MIT</span><span class="lang">JavaScript</span></div>
+      <p class="desc">Reorderable drag-and-drop lists for modern browsers and touch devices. No jQuery or framework required.</p>
+      <p class="why"><b>Why 2:</b> Framework-agnostic and extremely widely used, with a simpler mental model — but an older imperative API that fits React less naturally.</p>
+      <p class="promote"><b>Promote when:</b> Promote if dnd-kit&#x27;s abstractions get in the way.</p>
+      <p class="fit"><b>Fit:</b> JavaScript, MIT. Works anywhere.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/makeplane/plane" target="_blank" rel="noopener">makeplane/plane</a></div>
+      <div class="facts"><span class="stat"><b>55,956</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">AGPL-3.0</span><span class="lang">TypeScript</span></div>
+      <p class="desc">🔥🔥🔥 Open-source Jira, Linear, Monday, and ClickUp alternative. Plane is a modern project management platform to manage tasks, sprints, docs, and triage.</p>
+      <p class="why"><b>Why 3:</b> A complete project management product with cycles, modules and roadmaps — a rich source of interaction ideas, but AGPL-3.0, which would force the licence of anything it is linked into.</p>
+      <p class="promote"><b>Promote when:</b> Promote only as a reference to study, never as an embedded dependency.</p>
+      <p class="fit"><b>Fit:</b> TypeScript, AGPL-3.0. Licence blocks embedding.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/AppFlowy-IO/AppFlowy" target="_blank" rel="noopener">AppFlowy-IO/AppFlowy</a></div>
+      <div class="facts"><span class="stat"><b>75,369</b> stars</span>
+        <span class="badge active">active · 2026-08-11</span><span class="badge ">AGPL-3.0</span><span class="lang">Dart</span></div>
+      <p class="desc">Bring projects, wikis, and teams together with AI. AppFlowy is the AI collaborative workspace where you achieve more without losing control of your data. The leading open source Notion alternative.</p>
+      <p class="why"><b>Why 4:</b> Beautiful local-first workspace with kanban and boards, and a Rust core — but it is Flutter and also AGPL-3.0.</p>
+      <p class="promote"><b>Promote when:</b> Promote as a design reference for local-first boards; the licence rules it out as a dependency.</p>
+      <p class="fit"><b>Fit:</b> Dart/Flutter + Rust, AGPL-3.0. Reference only.</p>
+    </div></li></ol></section>
+<section class="component" data-id="presence">
+          <header><h2>Presence detection</h2>
+          <p class="job">Open the mic when he is at the machine, and close it when he is not — without using the camera.</p>
+          <span class="depth">3 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/newmarcel/KeepingYouAwake" target="_blank" rel="noopener">newmarcel/KeepingYouAwake</a></div>
+      <div class="facts"><span class="stat"><b>6,832</b> stars</span>
+        <span class="badge active">active · 2026-05-21</span><span class="badge ">MIT</span><span class="lang">Objective-C</span></div>
+      <p class="desc">Prevents your Mac from going to sleep.</p>
+      <p class="why"><b>Why 1:</b> A small, readable implementation of the IOPMAssertion pattern — the exact API for keeping the machine awake and observing power state.</p>
+      <p class="promote"><b>Promote when:</b> Reference implementation rather than a dependency; stays first as the thing to read.</p>
+      <p class="fit"><b>Fit:</b> Objective-C, MIT. Read it, do not link it.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/sindresorhus/get-windows" target="_blank" rel="noopener">sindresorhus/get-windows</a></div>
+      <div class="facts"><span class="stat"><b>915</b> stars</span>
+        <span class="badge maintained">maintained · 2026-03-08</span><span class="badge ">MIT</span><span class="lang">JavaScript</span></div>
+      <p class="desc">Get metadata about the active window and open windows (title, id, bounds, owner, etc)</p>
+      <p class="why"><b>Why 2:</b> Reliable active-window and focus detection on macOS, which is a decent proxy for presence; it moved from `sindresorhus/active-win`.</p>
+      <p class="promote"><b>Promote when:</b> Promote if window focus turns out to be a better presence signal than input idle time.</p>
+      <p class="fit"><b>Fit:</b> JavaScript/Swift helper, MIT. Note the rename.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/hovancik/stretchly" target="_blank" rel="noopener">hovancik/stretchly</a></div>
+      <div class="facts"><span class="stat"><b>6,467</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge ">BSD-2-Clause</span><span class="lang">JavaScript</span></div>
+      <p class="desc">The break time reminder app</p>
+      <p class="why"><b>Why 3:</b> A break reminder whose idle-detection logic is worth reading, since it solves the same &#x27;is the human here&#x27; problem.</p>
+      <p class="promote"><b>Promote when:</b> Reference only.</p>
+      <p class="fit"><b>Fit:</b> JavaScript, BSD-2. Read the idle logic.</p>
+    </div></li></ol><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>IOKit HIDIdleTime</b> — Not a repository: the system API these projects all wrap. Reading idle time and lock state directly needs no dependency at all, which is very likely the right answer here.</li></ul></details></section>
+<section class="component" data-id="stt">
+          <header><h2>Speech to text</h2>
+          <p class="job">Transcribe him locally, in Hebrew and English, fast enough to feel like conversation.</p>
+          <span class="depth">4 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/argmaxinc/argmax-oss-swift" target="_blank" rel="noopener">argmaxinc/argmax-oss-swift</a></div>
+      <div class="facts"><span class="stat"><b>6,322</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">MIT</span><span class="lang">Swift</span></div>
+      <p class="desc">On-device Speech AI for Apple Silicon</p>
+      <p class="why"><b>Why 1:</b> WhisperKit&#x27;s home after the rename — CoreML and Apple Neural Engine inference, the fastest path on this exact hardware, in Swift.</p>
+      <p class="promote"><b>Promote when:</b> Stays first while the target is Apple Silicon only.</p>
+      <p class="fit"><b>Fit:</b> Swift, MIT. Best Apple Silicon fit; note the rename from `argmaxinc/WhisperKit`.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/ggml-org/whisper.cpp" target="_blank" rel="noopener">ggml-org/whisper.cpp</a></div>
+      <div class="facts"><span class="stat"><b>52,885</b> stars</span>
+        <span class="badge active">active · 2026-08-07</span><span class="badge ">MIT</span><span class="lang">C++</span></div>
+      <p class="desc">Port of OpenAI&#x27;s Whisper model in C/C++</p>
+      <p class="why"><b>Why 2:</b> The most portable and most used, with Metal acceleration and an enormous ecosystem — slightly slower than CoreML on this hardware but far easier to embed anywhere.</p>
+      <p class="promote"><b>Promote when:</b> Promote the moment the project needs to run on anything that is not an Apple Silicon Mac.</p>
+      <p class="fit"><b>Fit:</b> C++, MIT. Metal on Apple Silicon.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/moonshine-ai/moonshine" target="_blank" rel="noopener">moonshine-ai/moonshine</a></div>
+      <div class="facts"><span class="stat"><b>10,836</b> stars</span>
+        <span class="badge active">active · 2026-08-14</span><span class="badge warn">no licence detected</span><span class="lang">C++</span></div>
+      <p class="desc">Very low latency speech to text, intent recognition, and text to speech, for building voice agents and interfaces</p>
+      <p class="why"><b>Why 3:</b> Built for short utterances and noticeably faster than Whisper on them, which suits a wake-word-triggered assistant — but no licence is detected and it moved from `usefulsensors/moonshine`.</p>
+      <p class="promote"><b>Promote when:</b> Promote if latency on short commands becomes the complaint; resolve the licence first.</p>
+      <p class="fit"><b>Fit:</b> C++/Python. Licence unresolved.</p>
+    </div></li>
+<li class="cand"><div class="rank">4</div><div class="body">
+      <div class="name"><a href="https://github.com/SYSTRAN/faster-whisper" target="_blank" rel="noopener">SYSTRAN/faster-whisper</a></div>
+      <div class="facts"><span class="stat"><b>24,900</b> stars</span>
+        <span class="badge maintained">maintained · 2025-11-19</span><span class="badge ">MIT</span><span class="lang">Python</span></div>
+      <p class="desc">Faster Whisper transcription with CTranslate2</p>
+      <p class="why"><b>Why 4:</b> Strong CTranslate2 implementation, but oriented to CUDA — the advantage largely disappears on Apple Silicon.</p>
+      <p class="promote"><b>Promote when:</b> Promote only if inference moves to an NVIDIA machine.</p>
+      <p class="fit"><b>Fit:</b> Python. Weaker fit on this hardware.</p>
+    </div></li></ol></section>
+<section class="component" data-id="push">
+          <header><h2>Push relay &amp; mobile sync</h2>
+          <p class="job">Reach his phone when he is away, with the relay self-hosted rather than a service he depends on.</p>
+          <span class="depth">3 ranked</span></header>
+          <ol class="cands"><li class="cand"><div class="rank">1</div><div class="body">
+      <div class="name"><a href="https://github.com/binwiederhier/ntfy" target="_blank" rel="noopener">binwiederhier/ntfy</a></div>
+      <div class="facts"><span class="stat"><b>33,462</b> stars</span>
+        <span class="badge active">active · 2026-08-11</span><span class="badge ">Apache-2.0</span><span class="lang">Go</span></div>
+      <p class="desc">Send push notifications to your phone or desktop using PUT/POST</p>
+      <p class="why"><b>Why 1:</b> Self-hosted push with published iOS and Android apps and a trivial HTTP API — the only candidate that satisfies &quot;every user runs their own relay&quot; without building a phone app first.</p>
+      <p class="promote"><b>Promote when:</b> Stays first unless the phone experience needs to be a full custom app rather than notifications.</p>
+      <p class="fit"><b>Fit:</b> Go, Apache-2.0. Self-hosted, apps exist.</p>
+    </div></li>
+<li class="cand"><div class="rank">2</div><div class="body">
+      <div class="name"><a href="https://github.com/hoytech/strfry" target="_blank" rel="noopener">hoytech/strfry</a></div>
+      <div class="facts"><span class="stat"><b>713</b> stars</span>
+        <span class="badge active">active · 2026-08-13</span><span class="badge ">GPL-3.0</span><span class="lang">C++</span></div>
+      <p class="desc">a nostr relay</p>
+      <p class="why"><b>Why 2:</b> A fast Nostr relay in C++, matching the sync protocol this project already speaks — but Nostr relays carry events, not push notifications, so it complements ntfy rather than replacing it.</p>
+      <p class="promote"><b>Promote when:</b> Promote if phone sync should ride the existing Nostr transport instead of a second channel.</p>
+      <p class="fit"><b>Fit:</b> C++, GPL-3.0. GPL needs consideration for a shipped bundle.</p>
+    </div></li>
+<li class="cand"><div class="rank">3</div><div class="body">
+      <div class="name"><a href="https://github.com/nostr-protocol/nips" target="_blank" rel="noopener">nostr-protocol/nips</a></div>
+      <div class="facts"><span class="stat"><b>3,069</b> stars</span>
+        <span class="badge active">active · 2026-08-12</span><span class="badge warn">no licence detected</span><span class="lang">—</span></div>
+      <p class="desc">Nostr Implementation Possibilities</p>
+      <p class="why"><b>Why 3:</b> The specification the existing relay implements — essential reading for anything touching sync, but not an implementation.</p>
+      <p class="promote"><b>Promote when:</b> Never promotes to a dependency.</p>
+      <p class="fit"><b>Fit:</b> Specification. Reference material.</p>
+    </div></li></ol><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>fiatjaf/khatru</b> — ARCHIVED. A well-regarded Go relay framework, but archived in September 2025 — it would have looked like a reasonable pick from memory.</li></ul></details></section>
+
+<footer>Ranked lists go at least three deep by design: whatever gets chosen will eventually hit a wall, and
+the next option needs to be already evaluated rather than researched again months later. Each entry carries
+why it sits where it does and the condition that would promote it.</footer>
+</div>
+<script>
+const chips=[...document.querySelectorAll('.chip')],secs=[...document.querySelectorAll('.component')];
+chips.forEach(c=>c.addEventListener('click',()=>{
+  chips.forEach(x=>x.classList.toggle('on',x===c));
+  const f=c.dataset.filter;
+  secs.forEach(s=>s.style.display=(f==='all'||s.dataset.id===f)?'':'none');
+}));
+</script></body></html>

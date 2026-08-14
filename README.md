@@ -1,12 +1,15 @@
 <div align="center">
 
-# idea-to-blueprint
+# blindspot
 
 **A Claude skill that turns an idea — or a half-planned project — into something you can actually build.**
 
+Named for what it hunts: the two things nobody can self-report — what you assumed was too obvious to say,
+and what you never thought of at all.
+
 One question at a time, until the unknowns run out. Then real components, with real numbers.
 
-[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Why it verifies](#why-the-harvest-verifies-everything)
+[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Why it verifies](#why-the-harvest-verifies-everything) · [Examples](examples/)
 
 </div>
 
@@ -36,7 +39,7 @@ disk as it arrives, because a long interview outlives the context window.
 **verify** them — stars, last commit, licence, platform — before recommending anything.
 
 You end with two files: a blueprint containing your own decisions, and a dashboard of components whose
-numbers were fetched rather than remembered.
+numbers were fetched rather than remembered. Both are in [`examples/`](examples/).
 
 ![The generated component dashboard: ranked candidates per component, each with verified stars, freshness, licence, and the reason it sits at that position](assets/dashboard-example.png)
 
@@ -174,7 +177,7 @@ reasons, so the same dead end is not investigated twice.
 ## Install
 
 ```bash
-git clone git@github.com:IdanTayree/idea-to-blueprint.git ~/.claude/skills/idea-to-blueprint
+git clone https://github.com/IdanTayree/blindspot.git ~/.claude/skills/blindspot
 ```
 
 Then start a Claude session and describe an idea. It triggers on things like *"I want to build…"*, *"help me
@@ -206,11 +209,12 @@ python3 scripts/build_dashboard.py harvest.json verified.json out.html
 ## Layout
 
 ```
-idea-to-blueprint/
+blindspot/
 ├── SKILL.md                     the two phases and the loop
 ├── references/
 │   ├── interview.md             quadrants, collision seams, depth levels, the progress table
 │   └── harvest.md               verification protocol and dashboard requirements
+├── examples/                    a real blueprint, ranking spec and rendered dashboard
 ├── assets/
 │   └── dashboard_template.html  the dashboard's look — edit here, not in Python
 └── scripts/

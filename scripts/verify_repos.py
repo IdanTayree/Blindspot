@@ -59,7 +59,7 @@ def _via_http(path: str) -> tuple[dict | None, str]:
     """The public API. Returns (payload, note) so a rate limit is reported rather than looking like a 404."""
     request = urllib.request.Request(
         API.rstrip("/").replace("/repos", "") + path,
-        headers={"Accept": "application/vnd.github+json", "User-Agent": "idea-to-blueprint"},
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "blindspot"},
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:

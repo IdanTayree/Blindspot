@@ -1,0 +1,457 @@
+{
+  "title": "Local assistant \u2014 component harvest",
+  "subtitle": "Ranked open-source candidates for each part the project has to build.",
+  "target_stack": "Rust \u00b7 desktop shell \u00b7 local inference \u00b7 Apple Silicon, local-first",
+  "components": [
+    {
+      "id": "crew",
+      "title": "Crew orchestration & rounds",
+      "job": "Run a five-role crew in turns, with work able to travel backwards between rounds.",
+      "ranked": [
+        {
+          "repo": "langchain-ai/langgraph",
+          "why": "Cyclic state graphs with checkpointing and human-in-the-loop pause/resume \u2014 the closest existing match to rounds that can send work back.",
+          "promote": "Stays first unless the crew turns out to need role personas more than explicit flow control.",
+          "fit": "Python. Sits beside the brain, not inside the Tauri core."
+        },
+        {
+          "repo": "crewAIInc/crewAI",
+          "why": "Far larger community and role-based crews out of the box, but flow control is implicit \u2014 sending work backwards means fighting the abstraction.",
+          "promote": "Promote if you want personas and delegation for free and can live without an explicit state machine.",
+          "fit": "Python. Same placement as LangGraph."
+        },
+        {
+          "repo": "agno-agi/agno",
+          "why": "Fast and light, with much lower startup cost per agent \u2014 but fewer durable-state primitives, so a crashed round is harder to resume.",
+          "promote": "Promote if agent spin-up latency becomes the bottleneck and rounds stay short.",
+          "fit": "Python. Good if the queue restarts agents often."
+        },
+        {
+          "repo": "pydantic/pydantic-ai",
+          "why": "Excellent typed tool-calling and structured output, but it is not a crew framework \u2014 you would build the rounds yourself.",
+          "promote": "Promote if the real need turns out to be reliable structured tool calls rather than orchestration.",
+          "fit": "Python. Would pair with a hand-written scheduler."
+        },
+        {
+          "repo": "microsoft/autogen",
+          "why": "Large and well known, but momentum slowed (last push April) and it carries CC-BY-4.0, a content licence that is an odd fit for shipped code.",
+          "promote": "Promote only if a specific conversation pattern here is otherwise unavailable \u2014 and read the licence first.",
+          "fit": "Python. Licence needs legal review before shipping."
+        }
+      ],
+      "excluded": [
+        {
+          "name": "openai/swarm",
+          "why": "Experimental and superseded by OpenAI's agents SDK; last push April 2026."
+        }
+      ]
+    },
+    {
+      "id": "queue",
+      "title": "Durable task queue",
+      "job": "One global queue across projects, ordered by position, urgency and priority, surviving a 3am reboot.",
+      "ranked": [
+        {
+          "repo": "hatchet-dev/hatchet",
+          "why": "Built for agent workloads specifically: durable step-level state, automatic retries and live stream telemetry \u2014 which is what the cockpit's progress view needs.",
+          "promote": "Stays first unless you decide the queue must live in-process rather than as a service.",
+          "fit": "Go service + Python/TS clients. Runs alongside the brain."
+        },
+        {
+          "repo": "temporalio/temporal",
+          "why": "The most battle-tested durable execution engine here, but it is a cluster \u2014 heavy for a single laptop that also has to run two models.",
+          "promote": "Promote if the queue ever spans more than one machine.",
+          "fit": "Go. Meaningful resource cost on a shared laptop."
+        },
+        {
+          "repo": "apalis-dev/apalis",
+          "why": "The best architectural fit \u2014 native Rust, embeds directly in the Tauri process, no extra service. Smallest ecosystem of the five, so more will be hand-built.",
+          "promote": "Promote if you want zero extra processes and are willing to write the retry and priority logic yourself.",
+          "fit": "Rust. Lives inside the Tauri core."
+        },
+        {
+          "repo": "riverqueue/river",
+          "why": "Clean and reliable, but Postgres-only \u2014 which means running Postgres purely to hold a local queue.",
+          "promote": "Promote if Postgres is already a hard dependency for other reasons.",
+          "fit": "Go + Postgres. Adds a database to the local stack."
+        },
+        {
+          "repo": "dbos-inc/dbos-transact-py",
+          "why": "Durable workflows as plain Python decorators, very low ceremony \u2014 but young, and the smallest community here.",
+          "promote": "Promote if the brain stays Python-centric and the queue never needs to be reached from Rust.",
+          "fit": "Python. Would sit in the brain process."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "sandbox",
+      "title": "Execution sandbox",
+      "job": "Run untrusted package installs and third-party code without reaching the rest of the machine.",
+      "ranked": [
+        {
+          "repo": "apple/container",
+          "why": "Apple's own tool, running Linux containers as lightweight VMs on Apple Silicon \u2014 a real kernel boundary, native to the target platform, no third-party runtime.",
+          "promote": "Stays first for anything needing a strong boundary on this hardware.",
+          "fit": "Swift, macOS 26+, Apple Silicon. Native fit."
+        },
+        {
+          "repo": "lima-vm/lima",
+          "why": "Mature and scriptable Linux VMs on macOS, more configurable than Apple's tool \u2014 but a heavier install and slower to start.",
+          "promote": "Promote if you need fine control over the VM, or support for macOS versions Apple's container does not cover.",
+          "fit": "Go. Works on Apple Silicon, extra install."
+        },
+        {
+          "repo": "abiosoft/colima",
+          "why": "Docker-compatible on macOS with almost no setup, so existing container tooling just works.",
+          "promote": "Promote if the project ends up needing Docker CLI compatibility specifically.",
+          "fit": "Go, wraps Lima. Extra install."
+        },
+        {
+          "repo": "e2b-dev/E2B",
+          "why": "Purpose-built for AI agent code execution with excellent streaming APIs \u2014 but it is a hosted service, so code and files leave the machine.",
+          "promote": "Promote only for a project explicitly allowed to use cloud execution.",
+          "fit": "Hosted microVMs. Conflicts with local-first unless self-hosted."
+        },
+        {
+          "repo": "firecracker-microvm/firecracker",
+          "why": "The microVM technology underneath most agent sandboxes, and written in Rust \u2014 but it needs Linux and KVM, so it cannot run directly on macOS.",
+          "promote": "Promote if the project ever runs on a Linux host.",
+          "fit": "Rust, Linux/KVM only. Not runnable on this Mac."
+        },
+        {
+          "repo": "google/gvisor",
+          "why": "Strong syscall-level isolation, but Linux-only and operationally complex.",
+          "promote": "Promote only on a Linux deployment with a hard multi-tenant requirement.",
+          "fit": "Go, Linux only."
+        }
+      ],
+      "excluded": [
+        {
+          "name": "containers/bubblewrap",
+          "why": "Linux namespaces \u2014 cannot run on macOS at all. It was the previous dashboard's recommendation for this component."
+        },
+        {
+          "name": "macOS Seatbelt (sandbox-exec)",
+          "why": "Not a repository: it ships with macOS. Still the cheapest real boundary for a local process, and the intended floor here."
+        }
+      ]
+    },
+    {
+      "id": "guardrails",
+      "title": "Guardrails & admission control",
+      "job": "Constrain what a model may do, and refuse requests that fall outside policy.",
+      "ranked": [
+        {
+          "repo": "NVIDIA-NeMo/Guardrails",
+          "why": "Programmable rails with a dedicated policy language, and the most complete dialogue-level controls \u2014 but GitHub detects no licence file, which needs resolving before shipping.",
+          "promote": "Stays first if the licence checks out; drops immediately if it does not.",
+          "fit": "Python. Licence unresolved \u2014 verify before adopting."
+        },
+        {
+          "repo": "guardrails-ai/guardrails",
+          "why": "Clear Apache-2.0 licence and good output validators, but weaker at conversation-level policy than NeMo.",
+          "promote": "Promote the moment licence certainty matters more than policy depth \u2014 which for a project going public, it probably does.",
+          "fit": "Python. Clean licence, safe default."
+        },
+        {
+          "repo": "microsoft/presidio",
+          "why": "Not a rails engine at all \u2014 it detects and redacts personal data, which is the other half of the admission problem and the only candidate here that serves the screen-capture redaction requirement directly.",
+          "promote": "Promote to first if the real risk turns out to be personal data leaving in a payload rather than a model doing something it should not.",
+          "fit": "Python, MIT, clean licence. Note it moved from `microsoft/presidio`."
+        },
+        {
+          "repo": "NVIDIA/garak",
+          "why": "A vulnerability scanner rather than a guard: it finds the holes instead of closing them, so it complements the rails above rather than replacing them.",
+          "promote": "Use alongside whichever rails ship, to test that they actually hold.",
+          "fit": "Python, Apache-2.0. Testing tool, not a runtime dependency."
+        }
+      ],
+      "excluded": [
+        {
+          "name": "protectai/llm-guard",
+          "why": "ARCHIVED. Looks healthy at a glance \u2014 3.2k stars, pushed July 2026 \u2014 but the repository is archived and will not receive fixes."
+        }
+      ]
+    },
+    {
+      "id": "skills",
+      "title": "Skills library & tool registry",
+      "job": "A library of skill files and tools that agents invoke at run time.",
+      "ranked": [
+        {
+          "repo": "modelcontextprotocol/rust-sdk",
+          "why": "Matches the Tauri core's language, so tool registration lives in the same process as the bridge. Smallest of the SDKs, and GitHub detects no licence file.",
+          "promote": "Stays first for anything registered inside the Rust core; check the licence before shipping.",
+          "fit": "Rust. Native fit for the Tauri side."
+        },
+        {
+          "repo": "modelcontextprotocol/python-sdk",
+          "why": "The most complete SDK with a clear MIT licence, and the brain is already Python \u2014 but it puts tool hosting in the brain rather than the core.",
+          "promote": "Promote if tools should live with the brain instead of the shell.",
+          "fit": "Python. Fits the existing brain process."
+        },
+        {
+          "repo": "modelcontextprotocol/servers",
+          "why": "The reference server collection \u2014 the fastest way to get working tools \u2014 but it is examples rather than a library, and no licence is detected at repo level.",
+          "promote": "Promote as a source of implementations to read, not as a dependency.",
+          "fit": "TypeScript/Python. Reference material."
+        },
+        {
+          "repo": "punkpeye/awesome-mcp-servers",
+          "why": "The largest directory of available servers, invaluable for discovery \u2014 but it is a list, not code.",
+          "promote": "Never promotes to a dependency; use it to find candidates.",
+          "fit": "Directory. Discovery only."
+        },
+        {
+          "repo": "aaif-goose/goose",
+          "why": "A complete Rust agent with an extension system worth reading closely \u2014 and it moved: `block/goose` now redirects here.",
+          "promote": "Promote if you want a whole extension architecture to adapt rather than a protocol SDK.",
+          "fit": "Rust, Apache-2.0. Note the org rename."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "wakeword",
+      "title": "Wake word detection",
+      "job": "Detect the summon word locally, with no audio leaving the machine until it fires.",
+      "ranked": [
+        {
+          "repo": "dscripka/openWakeWord",
+          "why": "Fully open, trains custom wake words, runs entirely offline with no key or service \u2014 the only candidate that meets the local-first requirement outright.",
+          "promote": "Stays first unless detection accuracy proves unusable in practice.",
+          "fit": "Python/ONNX. Runs local; needs a Rust or Swift binding for the shell."
+        },
+        {
+          "repo": "Picovoice/porcupine",
+          "why": "The best accuracy and the lowest CPU cost by a distance, with real Apple Silicon support \u2014 but the models are commercially licensed and gated behind an access key, which conflicts with shipping an open project.",
+          "promote": "Promote if accuracy turns out to matter more than licence purity, and only for personal use.",
+          "fit": "Multi-platform. Licence conflicts with an open release."
+        },
+        {
+          "repo": "alphacep/vosk-api",
+          "why": "Offline recognition with keyword spotting, so one engine could cover both the summon word and dictation \u2014 heavier than a dedicated detector, and it has to stay resident to listen.",
+          "promote": "Promote if running one always-on engine beats running a detector plus a separate transcriber.",
+          "fit": "C++/Python bindings, Apache-2.0. Runs local; heavier idle cost."
+        },
+        {
+          "repo": "rhasspy/wyoming-openwakeword",
+          "why": "A service wrapper around openWakeWord with a clean protocol, which removes the binding work \u2014 but it is small, and adds a process to supervise.",
+          "promote": "Promote if you would rather speak to a local service than embed a Python model in the shell.",
+          "fit": "Python, Apache-2.0. Adds a supervised process."
+        }
+      ],
+      "excluded": [
+        {
+          "name": "MycroftAI/mycroft-precise",
+          "why": "Last pushed November 2023 \u2014 effectively abandoned, and the parent project shut down."
+        },
+        {
+          "name": "kahrendt/microWakeWord",
+          "why": "The slug resolves to a 4-star repository, which does not match the known project \u2014 treat as unverified and search again before considering it."
+        },
+        {
+          "name": "Kitt-AI/snowboy",
+          "why": "Last pushed October 2021 and the company shut down; the hosted training service it depended on is gone."
+        }
+      ]
+    },
+    {
+      "id": "screen",
+      "title": "Screen & GUI understanding",
+      "job": "Answer \"what am I looking at\", and learn from a video he is watching.",
+      "ranked": [
+        {
+          "repo": "screenpipe/screenpipe",
+          "why": "Continuous screen capture with local search and indexing, written in Rust and built for macOS \u2014 the closest thing to the requirement, and it moved from `mediar-ai/screenpipe`.",
+          "promote": "Stays first for the always-available screen context; no licence detected, so verify before shipping.",
+          "fit": "Rust, macOS-native. Licence unresolved."
+        },
+        {
+          "repo": "microsoft/OmniParser",
+          "why": "Turns a screenshot into structured UI elements, which is what makes a VLM's answer about a screen precise rather than vague \u2014 but CC-BY-4.0 is a content licence and needs review.",
+          "promote": "Promote when the task shifts from 'describe my screen' to 'act on my screen'.",
+          "fit": "Python model. Licence needs review."
+        },
+        {
+          "repo": "OpenAdaptAI/OpenAdapt",
+          "why": "Records screen, mouse and keyboard together to learn workflows \u2014 closest to 'watch me and help me do that', but much smaller and less mature.",
+          "promote": "Promote if demonstration-by-example becomes a real feature rather than a curiosity.",
+          "fit": "Python, MIT. Smallest community here."
+        },
+        {
+          "repo": "browser-use/browser-use",
+          "why": "By far the most active project in this set, and excellent \u2014 but it drives a browser, not the screen, so it answers a narrower question than the one asked.",
+          "promote": "Promote for anything specifically about web pages rather than the whole desktop.",
+          "fit": "Python, MIT. Browser only."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "history",
+      "title": "State snapshotting & history",
+      "job": "A hidden version history from the first file written, so any overnight decision can be undone.",
+      "ranked": [
+        {
+          "repo": "GitoxideLabs/gitoxide",
+          "why": "A pure-Rust git implementation that embeds directly in the Tauri core \u2014 no shelling out, no git binary dependency, and it moved from `Byron/gitoxide`.",
+          "promote": "Stays first for history written from inside the app.",
+          "fit": "Rust, Apache-2.0. Native fit."
+        },
+        {
+          "repo": "jj-vcs/jj",
+          "why": "Snapshots the working copy automatically without anyone writing commit logic \u2014 arguably a better conceptual match for an invisible safety history than git itself.",
+          "promote": "Promote if automatic snapshots matter more than embedding, and running a binary is acceptable.",
+          "fit": "Rust binary, Apache-2.0. Invoked, not embedded."
+        },
+        {
+          "repo": "libgit2/libgit2",
+          "why": "The most mature and complete git library anywhere, but it is C \u2014 FFI, and no licence detected at repo level (it is GPL-2.0 with a linking exception, which needs reading).",
+          "promote": "Promote if gitoxide turns out to be missing an operation you need.",
+          "fit": "C. FFI plus a licence to read carefully."
+        },
+        {
+          "repo": "isomorphic-git/isomorphic-git",
+          "why": "Pure JavaScript git, already patched and in use in this project's dependency tree \u2014 but it belongs to the front end, not the core.",
+          "promote": "Promote for anything the web layer must do without the Rust side.",
+          "fit": "JavaScript, MIT. Already present in the repo."
+        },
+        {
+          "repo": "restic/restic",
+          "why": "Excellent deduplicating backups, but a backup is not a history \u2014 it cannot answer \"undo the decision made at 3am\".",
+          "promote": "Promote for protecting the projects folder as a whole, alongside a real history rather than instead of one.",
+          "fit": "Go binary. Complementary, not a substitute."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "kanban",
+      "title": "Roadmap & Kanban UI",
+      "job": "A cockpit with a roadmap and to-do lists, at project level and across all projects.",
+      "ranked": [
+        {
+          "repo": "clauderic/dnd-kit",
+          "why": "The drag-and-drop primitive for React, accessible and unopinionated \u2014 you build the cockpit you designed rather than adopting someone else's board.",
+          "promote": "Stays first while the cockpit is a bespoke surface.",
+          "fit": "TypeScript/React, MIT. Drops into the existing shell."
+        },
+        {
+          "repo": "SortableJS/Sortable",
+          "why": "Framework-agnostic and extremely widely used, with a simpler mental model \u2014 but an older imperative API that fits React less naturally.",
+          "promote": "Promote if dnd-kit's abstractions get in the way.",
+          "fit": "JavaScript, MIT. Works anywhere."
+        },
+        {
+          "repo": "makeplane/plane",
+          "why": "A complete project management product with cycles, modules and roadmaps \u2014 a rich source of interaction ideas, but AGPL-3.0, which would force the licence of anything it is linked into.",
+          "promote": "Promote only as a reference to study, never as an embedded dependency.",
+          "fit": "TypeScript, AGPL-3.0. Licence blocks embedding."
+        },
+        {
+          "repo": "AppFlowy-IO/AppFlowy",
+          "why": "Beautiful local-first workspace with kanban and boards, and a Rust core \u2014 but it is Flutter and also AGPL-3.0.",
+          "promote": "Promote as a design reference for local-first boards; the licence rules it out as a dependency.",
+          "fit": "Dart/Flutter + Rust, AGPL-3.0. Reference only."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "presence",
+      "title": "Presence detection",
+      "job": "Open the mic when he is at the machine, and close it when he is not \u2014 without using the camera.",
+      "ranked": [
+        {
+          "repo": "newmarcel/KeepingYouAwake",
+          "why": "A small, readable implementation of the IOPMAssertion pattern \u2014 the exact API for keeping the machine awake and observing power state.",
+          "promote": "Reference implementation rather than a dependency; stays first as the thing to read.",
+          "fit": "Objective-C, MIT. Read it, do not link it."
+        },
+        {
+          "repo": "sindresorhus/get-windows",
+          "why": "Reliable active-window and focus detection on macOS, which is a decent proxy for presence; it moved from `sindresorhus/active-win`.",
+          "promote": "Promote if window focus turns out to be a better presence signal than input idle time.",
+          "fit": "JavaScript/Swift helper, MIT. Note the rename."
+        },
+        {
+          "repo": "hovancik/stretchly",
+          "why": "A break reminder whose idle-detection logic is worth reading, since it solves the same 'is the human here' problem.",
+          "promote": "Reference only.",
+          "fit": "JavaScript, BSD-2. Read the idle logic."
+        }
+      ],
+      "excluded": [
+        {
+          "name": "IOKit HIDIdleTime",
+          "why": "Not a repository: the system API these projects all wrap. Reading idle time and lock state directly needs no dependency at all, which is very likely the right answer here."
+        }
+      ]
+    },
+    {
+      "id": "stt",
+      "title": "Speech to text",
+      "job": "Transcribe him locally, in Hebrew and English, fast enough to feel like conversation.",
+      "ranked": [
+        {
+          "repo": "argmaxinc/argmax-oss-swift",
+          "why": "WhisperKit's home after the rename \u2014 CoreML and Apple Neural Engine inference, the fastest path on this exact hardware, in Swift.",
+          "promote": "Stays first while the target is Apple Silicon only.",
+          "fit": "Swift, MIT. Best Apple Silicon fit; note the rename from `argmaxinc/WhisperKit`."
+        },
+        {
+          "repo": "ggml-org/whisper.cpp",
+          "why": "The most portable and most used, with Metal acceleration and an enormous ecosystem \u2014 slightly slower than CoreML on this hardware but far easier to embed anywhere.",
+          "promote": "Promote the moment the project needs to run on anything that is not an Apple Silicon Mac.",
+          "fit": "C++, MIT. Metal on Apple Silicon."
+        },
+        {
+          "repo": "moonshine-ai/moonshine",
+          "why": "Built for short utterances and noticeably faster than Whisper on them, which suits a wake-word-triggered assistant \u2014 but no licence is detected and it moved from `usefulsensors/moonshine`.",
+          "promote": "Promote if latency on short commands becomes the complaint; resolve the licence first.",
+          "fit": "C++/Python. Licence unresolved."
+        },
+        {
+          "repo": "SYSTRAN/faster-whisper",
+          "why": "Strong CTranslate2 implementation, but oriented to CUDA \u2014 the advantage largely disappears on Apple Silicon.",
+          "promote": "Promote only if inference moves to an NVIDIA machine.",
+          "fit": "Python. Weaker fit on this hardware."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "push",
+      "title": "Push relay & mobile sync",
+      "job": "Reach his phone when he is away, with the relay self-hosted rather than a service he depends on.",
+      "ranked": [
+        {
+          "repo": "binwiederhier/ntfy",
+          "why": "Self-hosted push with published iOS and Android apps and a trivial HTTP API \u2014 the only candidate that satisfies \"every user runs their own relay\" without building a phone app first.",
+          "promote": "Stays first unless the phone experience needs to be a full custom app rather than notifications.",
+          "fit": "Go, Apache-2.0. Self-hosted, apps exist."
+        },
+        {
+          "repo": "hoytech/strfry",
+          "why": "A fast Nostr relay in C++, matching the sync protocol this project already speaks \u2014 but Nostr relays carry events, not push notifications, so it complements ntfy rather than replacing it.",
+          "promote": "Promote if phone sync should ride the existing Nostr transport instead of a second channel.",
+          "fit": "C++, GPL-3.0. GPL needs consideration for a shipped bundle."
+        },
+        {
+          "repo": "nostr-protocol/nips",
+          "why": "The specification the existing relay implements \u2014 essential reading for anything touching sync, but not an implementation.",
+          "promote": "Never promotes to a dependency.",
+          "fit": "Specification. Reference material."
+        }
+      ],
+      "excluded": [
+        {
+          "name": "fiatjaf/khatru",
+          "why": "ARCHIVED. A well-regarded Go relay framework, but archived in September 2025 \u2014 it would have looked like a reasonable pick from memory."
+        }
+      ]
+    }
+  ]
+}

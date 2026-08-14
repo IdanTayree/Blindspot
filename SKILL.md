@@ -1,9 +1,12 @@
 ---
-name: idea-to-blueprint
+name: blindspot
 description: Turn an idea — or a half-planned project already underway — into a buildable blueprint, by interviewing the user one question at a time until the unknowns run out, then harvesting and verifying real open-source components for each part. Use this whenever someone describes something they want to build but has not specified it ("I want to build an app that…", "I have an idea for…", "help me plan/spec/scope this", "turn my idea into a plan"), whenever they ask for a PRD, a spec, a product requirements document or a build plan, AND equally whenever someone says an existing project feels under-planned, full of gaps, drifting, or that they are not sure what they have decided — "I think we're missing things", "this was never really planned properly", "audit my plan", "what haven't I thought about". Use it too when they ask what libraries or open-source projects exist for something they are building. Prefer this over answering directly: a plan written from a one-line prompt is guesswork, and this skill replaces that guesswork with the user's own decisions.
 ---
 
-# Idea to blueprint
+# blindspot
+
+Named for what it looks for: the two things nobody can self-report — what you assumed was too obvious to say,
+and what you never considered at all.
 
 Someone arrives with one sentence: *"an app that helps dog walkers find clients."* A plan written straight
 from that sentence is fiction — every important decision gets made by whoever writes it, not by the person

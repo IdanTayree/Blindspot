@@ -94,7 +94,7 @@ installed (5,000 requests/hour instead of 60) and falls back to the public API.
 
 Renames are worth the run on their own. Verifying 60 candidates for one project turned up **nine slugs that
 had silently moved** — `microsoft/presidio`, `Byron/gitoxide`, `argmaxinc/WhisperKit`, `block/goose` and
-others all redirect now. A stale slug in someone'''s notes outlives the rename by years.
+others all redirect now. A stale slug in someone's notes outlives the rename by years.
 
 ## Layout
 

@@ -2,7 +2,7 @@
 
 <img src="assets/logo.png" width="92" alt="">
 
-# blindspot
+# Blindspot
 
 **A Claude skill that turns an idea — or a half-planned project — into something you can actually build.**
 

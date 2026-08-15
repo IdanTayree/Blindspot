@@ -11,7 +11,7 @@ and what you never thought of at all.
 
 One question at a time, until the unknowns run out. Then real components, with real numbers.
 
-[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Why it verifies](#why-the-harvest-verifies-everything) · [Examples](examples/)
+[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Hunt scope](#two-scopes-asked-before-searching) · [Why it verifies](#why-the-harvest-verifies-everything) · [Examples](examples/)
 
 </div>
 
@@ -33,12 +33,21 @@ This skill handles both.
 
 ## How it works
 
-**Phase 1 — the interview.** One question per message. Not a form, not a batch of five: people answer forms
-shallowly, and shallow answers are exactly the ones that produce a wrong build. Every answer is written to
-disk as it arrives, because a long interview outlives the context window.
+Two phases, and each opens by asking you one thing before it starts — the depth to run at, then the scope to
+hunt at. Both are cheap to answer and expensive to get wrong.
 
-**Phase 2 — the harvest.** For each component the blueprint needs, find real open-source projects and
-**verify** them — stars, last commit, licence, platform — before recommending anything.
+| | **Phase 1 — the interview** | **Phase 2 — the harvest** |
+|:--|:--|:--|
+| **What happens** | one question per message until the unknowns stop appearing | real open-source candidates found and verified for each part |
+| **Asks first** | [which depth](#three-depths-chosen-up-front) — beginner, moderate, pro | [which scope](#two-scopes-asked-before-searching) — components, or anything that saves work |
+| **You get** | `<slug>-blueprint.md` | `<slug>-harvest.html` |
+
+**Phase 1** is one question per message — not a form, not a batch of five. People answer forms shallowly, and
+shallow answers are exactly the ones that produce a wrong build. Every answer is written to disk as it
+arrives, because a long interview outlives the context window.
+
+**Phase 2** takes each part the blueprint needs and finds real projects for it, **verifying** every one —
+stars, last commit, licence, platform — before recommending anything.
 
 You end with two files: a blueprint containing your own decisions, and a dashboard of components whose
 numbers were fetched rather than remembered. Both are in [`examples/`](examples/).
@@ -133,7 +142,7 @@ so at a spawn rate of 0.5, fifteen open questions really mean about **thirty** m
 the idea is still expanding and no honest estimate exists, and the skill says that instead of inventing a
 number.
 
-### Three other things it does deliberately
+### Three other things the interview does deliberately
 
 - **Forced choices where they help.** *"Sign in with Google, or email and password? Google is faster to build
   and means no password resets; email works for people who avoid Google accounts."* People can react even
@@ -143,6 +152,38 @@ number.
 - **Check claims instead of transcribing them.** If you assert something checkable — a tool exists, a licence
   permits something, your machine can do X — it verifies. A blueprint built on a false premise fails at
   implementation, which is the most expensive place to find out.
+
+## Two scopes, asked before searching
+
+The harvest builds its shopping list from the blueprint — and a blueprint has a blind spot of its own. It
+describes what a system has to do to **function**. It never mentions what stops it looking homemade.
+
+So phase 2 opens with one question:
+
+> **1 — The components.** Only the parts the blueprint says have to be built. Focused; every result maps to
+> something already decided.
+>
+> **2 — Anything that saves work.** Those parts *and* the layer no blueprint ever lists.
+
+It defaults to **2** when you have no preference. Those extra cards cost one more search each and are the ones
+people adopt fastest — adoption is a single import rather than an architecture decision.
+
+The recurring ones, named by the **job** rather than by a library, for the same reason everything else here
+is: calling it "xterm" narrows the search to xterm's competitors before it starts.
+
+| The job | Not called | Because |
+|:--|:--|:--|
+| log and terminal output | "xterm" | terminal emulators are a field, not one library |
+| reviewing a diff | "monaco" | diff review has lighter options than a whole editor |
+| command palette and keyboard entry | "cmdk" | two different interaction models compete here |
+| first-run guidance | "a tour library" | wizards and tours are separate shapes |
+| loading, empty and error states | "spinners" | the most hand-rolled layer of any app |
+| drag-and-drop and boards | "dnd" | the framework already in use usually decides it |
+| timelines and roadmaps | "gantt" | ranges from one component to a whole framework |
+| graph and relationship views | "d3" | rendering and layout are separable choices |
+
+Leaving that layer out feels like a thorough hunt, right up until someone spends an afternoon rebuilding a
+spinner that already existed.
 
 ## Why the harvest verifies everything
 
@@ -179,7 +220,7 @@ reasons, so the same dead end is not investigated twice.
 ## Install
 
 ```bash
-git clone https://github.com/IdanTayree/blindspot.git ~/.claude/skills/blindspot
+git clone https://github.com/IdanTayree/Blindspot.git ~/.claude/skills/blindspot
 ```
 
 Then start a Claude session and describe an idea. It triggers on things like *"I want to build…"*, *"help me

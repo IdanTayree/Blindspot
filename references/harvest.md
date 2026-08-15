@@ -32,6 +32,26 @@ For each component, write down the **constraints that disqualify** before search
 runs-locally, licence compatibility, whether a service dependency is acceptable. These do the filtering
 later.
 
+**And ask the scope question first — components only, or anything that saves work?** (SKILL.md carries the
+wording.) If they chose the wider scope, the list gains entries the blueprint never produced, because a
+blueprint describes what a system must do and not what stops it looking homemade. The recurring ones, named
+by job:
+
+| Job | Not | Because |
+|---|---|---|
+| log and terminal output | "xterm" | terminal emulators are a field, not one library |
+| reviewing a diff | "monaco" | diff review has lighter options than a whole editor |
+| command palette / keyboard entry | "cmdk" | two different interaction models compete here |
+| first-run guidance | "a tour library" | wizards and tours are separate shapes |
+| loading, empty and error states | "spinners" | the most hand-rolled layer of any app |
+| drag-and-drop and boards | "dnd" | the framework already in use usually decides this |
+| timelines and roadmaps | "gantt" | ranges from a component to a framework |
+| graph and relationship views | "d3" | rendering and layout are separable choices |
+
+These are the cards users adopt fastest, because adoption is a single import rather than an architecture
+decision — which is exactly why leaving them out feels like a thorough hunt right up until someone spends a
+day rebuilding a spinner.
+
 ### 2. Search
 
 Search the web for current candidates. Useful queries combine the job with the constraint — "durable task

@@ -186,7 +186,26 @@ local library. That output looks authoritative and wastes days.
 
 So the rule for this phase: **every number that appears in the output was fetched, not remembered.**
 
-1. **Derive the component list** from the blueprint — one entry per part that needs building or buying.
+### Before searching, ask what the hunt should cover
+
+One question, in one message, the same way the depth level is asked up front — because the two answers
+produce genuinely different searches, and the wider one is nobody's default assumption:
+
+> **1 — The components.** Only the parts the blueprint says have to be built. Focused; every result maps to
+> something already decided.
+> **2 — Anything that saves work.** Those parts *and* the layer no blueprint ever lists — loaders, command
+> palettes, diff viewers, log terminals, onboarding tours, empty states, icon sets, drag-and-drop.
+
+A blueprint names what a system needs to **function**. It never names what stops it looking homemade, so that
+layer is invisible to the component list and gets hand-rolled — badly, an afternoon at a time — unless
+somebody asks. **Default to 2** when the user has no preference: those cards cost one extra search each and
+are the ones people adopt first, because they are drop-in.
+
+If they choose 2, name the extra entries by the recurring interface *job* rather than by a library, exactly as
+with everything else: "log and terminal output", not "xterm".
+
+1. **Derive the component list** from the blueprint — one entry per part that needs building or buying, plus
+   the polish layer if they chose scope 2.
 2. **Find candidates** for each, using search. Aim for a primary plus one or two alternatives.
 3. **Verify every candidate** by running `scripts/verify_repos.py` (see below). It returns real stars, last
    push date, licence, language and archived status from the GitHub API.

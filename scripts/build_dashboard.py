@@ -32,6 +32,9 @@ Spec format (`harvest.json`):
              "promote": "the condition under which the user should switch to it",
              "fit":     "how it sits in the target stack"}
           ],
+          "consult": [{"repo": "owner/name",
+                       "why_not": "why it cannot be adopted",
+                       "take": "what specifically to extract, and from where"}],
           "excluded": [{"name": "owner/name or a non-repo option", "why": "reason"}]
         }
       ]
@@ -39,6 +42,10 @@ Spec format (`harvest.json`):
 
 Rank at least three deep. A component with one survivor is a component with no fallback, and the whole point
 of the list is that when the first choice hits a wall the second is already evaluated.
+
+`consult` is for candidates that cannot be adopted but are still worth reading — an AGPL product, an archived
+project, a commercially licensed model. Each needs a specific extraction target, because "worth a look" is a
+note nobody actions. `excluded` is then the genuinely small category: wrong problem, or nothing to take.
 
 A `repo` the verifier could not confirm still renders — labelled `unverified`, with no invented numbers. A
 repo that has been renamed shows the slug it moved from, because a stale slug in someone's notes is how a
@@ -105,6 +112,27 @@ def candidate_html(rank: int, entry: dict, repos: dict) -> str:
     </div></li>"""
 
 
+def consult_html(entry: dict, repos: dict) -> str:
+    """A candidate that cannot be adopted but is worth reading, with the extraction named.
+
+    Rendered as prominently as the ranked list rather than buried in a collapsed footnote — for a project
+    with an awkward licence or an abandoned maintainer, this is frequently where the useful part is.
+    """
+    slug = entry.get("repo", "")
+    row = repos.get(slug.lower())
+    if row:
+        head = (f'<a href="{esc(row["html_url"])}" target="_blank" rel="noopener">{esc(row["repo"])}</a>'
+                f'<span class="badge">{row["stars"]:,} ★</span>'
+                f'<span class="badge {"warn" if not row.get("license") else ""}">'
+                f'{esc(row.get("license") or "no licence detected")}</span>'
+                + ('<span class="badge bad">archived</span>' if row.get("archived") else ""))
+    else:
+        head = esc(slug)
+    return (f'<li><div class="cname">{head}</div>'
+            f'<p class="whynot"><b>Cannot adopt:</b> {esc(entry.get("why_not", ""))}</p>'
+            f'<p class="take"><b>Take:</b> {esc(entry.get("take", ""))}</p></li>')
+
+
 #: The page's look lives here rather than in this file, so it can be reskinned without touching Python — and
 #: so every project's dashboard comes out looking the same instead of being reinvented per run.
 DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent / "assets" / "dashboard_template.html"
@@ -121,7 +149,7 @@ def build(spec: dict, verified: list, template_path: Path | None = None) -> str:
     repos = index(verified)
     checked = next((r.get("checked_at", "") for r in verified if r.get("verified")), "")
 
-    sections, ranked_total, excluded_total = [], 0, 0
+    sections, ranked_total, excluded_total, consult_total = [], 0, 0, 0
     for comp in spec.get("components", []):
         ranked = comp.get("ranked", [])
         excluded = comp.get("excluded", [])
@@ -129,6 +157,14 @@ def build(spec: dict, verified: list, template_path: Path | None = None) -> str:
         excluded_total += len(excluded)
 
         items = "\n".join(candidate_html(i + 1, e, repos) for i, e in enumerate(ranked))
+
+        consult = comp.get("consult", [])
+        consult_total += len(consult)
+        consult_block = ""
+        if consult:
+            rows = "\n".join(consult_html(c, repos) for c in consult)
+            consult_block = (f'<details class="consult" open><summary>Cannot adopt, worth reading — '
+                             f'{len(consult)}</summary><ul>{rows}</ul></details>')
         block = ""
         if excluded:
             rows = "\n".join(
@@ -140,7 +176,7 @@ def build(spec: dict, verified: list, template_path: Path | None = None) -> str:
           <header><h2>{esc(comp.get('title',''))}</h2>
           <p class="job">{esc(comp.get('job',''))}</p>
           <span class="depth">{len(ranked)} ranked</span></header>
-          <ol class="cands">{items}</ol>{block}</section>""")
+          <ol class="cands">{items}</ol>{consult_block}{block}</section>""")
 
     chips = "\n".join(
         f'<button class="chip" data-filter="{esc(c.get("id",""))}">{esc(c.get("title",""))}</button>'
@@ -151,7 +187,7 @@ def build(spec: dict, verified: list, template_path: Path | None = None) -> str:
         subtitle=esc(spec.get("subtitle", "")),
         target=esc(spec.get("target_stack", "")),
         components=len(spec.get("components", [])),
-        ranked=ranked_total, excluded=excluded_total,
+        ranked=ranked_total, excluded=excluded_total, consult=consult_total,
         checked=esc(checked), chips=chips, sections="\n".join(sections))
 
 

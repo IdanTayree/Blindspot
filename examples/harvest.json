@@ -44,7 +44,8 @@
           "name": "openai/swarm",
           "why": "Experimental and superseded by OpenAI's agents SDK; last push April 2026."
         }
-      ]
+      ],
+      "consult": []
     },
     {
       "id": "queue",
@@ -82,7 +83,8 @@
           "fit": "Python. Would sit in the brain process."
         }
       ],
-      "excluded": []
+      "excluded": [],
+      "consult": []
     },
     {
       "id": "sandbox",
@@ -128,12 +130,15 @@
       ],
       "excluded": [
         {
-          "name": "containers/bubblewrap",
-          "why": "Linux namespaces \u2014 cannot run on macOS at all. It was the previous dashboard's recommendation for this component."
-        },
-        {
           "name": "macOS Seatbelt (sandbox-exec)",
           "why": "Not a repository: it ships with macOS. Still the cheapest real boundary for a local process, and the intended floor here."
+        }
+      ],
+      "consult": [
+        {
+          "repo": "containers/bubblewrap",
+          "why_not": "Linux namespaces \u2014 it cannot run on macOS at all, whatever its licence says.",
+          "take": "Its capability-drop list and default-deny profile, which is a ready-made checklist of what the Seatbelt profile has to forbid. Read the man page and the default profiles, not the C."
         }
       ]
     },
@@ -167,10 +172,12 @@
           "fit": "Python, Apache-2.0. Testing tool, not a runtime dependency."
         }
       ],
-      "excluded": [
+      "excluded": [],
+      "consult": [
         {
-          "name": "protectai/llm-guard",
-          "why": "ARCHIVED. Looks healthy at a glance \u2014 3.2k stars, pushed July 2026 \u2014 but the repository is archived and will not receive fixes."
+          "repo": "protectai/llm-guard",
+          "why_not": "Archived \u2014 it will not receive fixes, so it cannot be a dependency.",
+          "take": "Its scanner taxonomy: the named list of attack classes it detects is the best free checklist of what a guardrail has to cover. Read the README's scanner table and turn it into requirements."
         }
       ]
     },
@@ -210,7 +217,8 @@
           "fit": "Rust, Apache-2.0. Note the org rename."
         }
       ],
-      "excluded": []
+      "excluded": [],
+      "consult": []
     },
     {
       "id": "wakeword",
@@ -244,16 +252,19 @@
       ],
       "excluded": [
         {
-          "name": "MycroftAI/mycroft-precise",
-          "why": "Last pushed November 2023 \u2014 effectively abandoned, and the parent project shut down."
-        },
-        {
           "name": "kahrendt/microWakeWord",
           "why": "The slug resolves to a 4-star repository, which does not match the known project \u2014 treat as unverified and search again before considering it."
         },
         {
           "name": "Kitt-AI/snowboy",
           "why": "Last pushed October 2021 and the company shut down; the hosted training service it depended on is gone."
+        }
+      ],
+      "consult": [
+        {
+          "repo": "MycroftAI/mycroft-precise",
+          "why_not": "Last pushed November 2023 and the parent company shut down \u2014 nothing here is maintained.",
+          "take": "Its training pipeline for a custom wake word: how many samples, how they were augmented, and how false-accept rate was measured. That measurement method is the part nobody writes down, and it is in the README."
         }
       ]
     },
@@ -287,7 +298,8 @@
           "fit": "Python, MIT. Browser only."
         }
       ],
-      "excluded": []
+      "excluded": [],
+      "consult": []
     },
     {
       "id": "history",
@@ -325,7 +337,8 @@
           "fit": "Go binary. Complementary, not a substitute."
         }
       ],
-      "excluded": []
+      "excluded": [],
+      "consult": []
     },
     {
       "id": "kanban",
@@ -345,19 +358,31 @@
           "fit": "JavaScript, MIT. Works anywhere."
         },
         {
+          "repo": "atlassian/pragmatic-drag-and-drop",
+          "why": "Atlassian's own drag primitive, extracted from Jira and Trello \u2014 framework-agnostic, built on native HTML drag-and-drop so it is fast on long boards. No licence detected at repo level, which needs checking before shipping.",
+          "promote": "Promote above dnd-kit if board performance with hundreds of tasks becomes the problem.",
+          "fit": "TypeScript, framework-agnostic. Drops into the existing shell."
+        },
+        {
+          "repo": "hello-pangea/dnd",
+          "why": "The maintained fork of react-beautiful-dnd, with the most familiar API of the three \u2014 but list-only, so it will not do a freeform canvas.",
+          "promote": "Promote if the cockpit stays strictly list-and-column shaped and speed of implementation matters most.",
+          "fit": "React, TypeScript. Highest familiarity, narrowest scope."
+        }
+      ],
+      "excluded": [],
+      "consult": [
+        {
           "repo": "makeplane/plane",
-          "why": "A complete project management product with cycles, modules and roadmaps \u2014 a rich source of interaction ideas, but AGPL-3.0, which would force the licence of anything it is linked into.",
-          "promote": "Promote only as a reference to study, never as an embedded dependency.",
-          "fit": "TypeScript, AGPL-3.0. Licence blocks embedding."
+          "why_not": "AGPL-3.0 \u2014 linking it into a non-AGPL app would force the whole project's licence.",
+          "take": "Its cycles-and-modules model, which is a working answer to 'what sits between a project and a task' \u2014 the exact gap in the roadmap design. Read the product docs and the issues tagged `cycles`, not the source."
         },
         {
           "repo": "AppFlowy-IO/AppFlowy",
-          "why": "Beautiful local-first workspace with kanban and boards, and a Rust core \u2014 but it is Flutter and also AGPL-3.0.",
-          "promote": "Promote as a design reference for local-first boards; the licence rules it out as a dependency.",
-          "fit": "Dart/Flutter + Rust, AGPL-3.0. Reference only."
+          "why_not": "AGPL-3.0, and Flutter rather than the target stack.",
+          "take": "How a local-first board handles conflict when the same card is edited in two places \u2014 read their sync design notes and the issues tagged `sync`. That question is unanswered in this project and will arrive with the phone."
         }
-      ],
-      "excluded": []
+      ]
     },
     {
       "id": "presence",
@@ -388,7 +413,8 @@
           "name": "IOKit HIDIdleTime",
           "why": "Not a repository: the system API these projects all wrap. Reading idle time and lock state directly needs no dependency at all, which is very likely the right answer here."
         }
-      ]
+      ],
+      "consult": []
     },
     {
       "id": "stt",
@@ -420,7 +446,8 @@
           "fit": "Python. Weaker fit on this hardware."
         }
       ],
-      "excluded": []
+      "excluded": [],
+      "consult": []
     },
     {
       "id": "push",
@@ -446,10 +473,12 @@
           "fit": "Specification. Reference material."
         }
       ],
-      "excluded": [
+      "excluded": [],
+      "consult": [
         {
-          "name": "fiatjaf/khatru",
-          "why": "ARCHIVED. A well-regarded Go relay framework, but archived in September 2025 \u2014 it would have looked like a reasonable pick from memory."
+          "repo": "fiatjaf/khatru",
+          "why_not": "Archived in September 2025.",
+          "take": "Its policy-hook design \u2014 the set of decision points a relay needs before accepting an event. That list is the specification for the self-hosted relay, and it is in the README rather than the Go."
         }
       ]
     }

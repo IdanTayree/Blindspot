@@ -129,6 +129,19 @@ ol.cands { list-style:none; margin:0; padding:0; }
 .promote b { color:var(--accent-cyan); font-weight:600; }
 .fit b { color:var(--text-muted); font-weight:600; }
 
+.consult { margin-top:18px; border:1px solid rgba(6,182,212,.22); background:rgba(6,182,212,.05);
+  border-radius:var(--radius-md); padding:13px 16px; }
+.consult summary { cursor:pointer; font-size:12.5px; color:var(--accent-cyan); font-weight:600; }
+.consult summary:focus-visible { outline:2px solid var(--accent-cyan); outline-offset:3px; }
+.consult ul { margin:12px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:13px; }
+.consult li { padding-left:13px; border-left:2px solid rgba(6,182,212,.3); }
+.cname { font-family:var(--mono); font-size:13px; display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+.cname a { color:var(--text-main); text-decoration:none; border-bottom:1px solid var(--border-accent); }
+.cname a:hover { color:var(--accent-cyan); }
+.whynot, .take { margin:5px 0 0; font-size:12.5px; color:var(--text-muted); }
+.whynot b { color:var(--accent-amber); font-weight:600; }
+.take b { color:var(--accent-cyan); font-weight:600; }
+
 .excluded { margin-top:16px; border-top:1px dashed var(--border-subtle); padding-top:14px; }
 .excluded summary { cursor:pointer; font-size:12.5px; color:var(--accent-rose); }
 .excluded summary:focus-visible { outline:2px solid var(--accent-indigo); outline-offset:3px; }
@@ -145,6 +158,7 @@ footer { margin-top:38px; padding-top:20px; border-top:1px solid var(--border-su
   <div class="meta">
     <span class="stat-pill"><b>$components</b> components</span>
     <span class="stat-pill"><b>$ranked</b> ranked candidates</span>
+    <span class="stat-pill"><b>$consult</b> worth reading, not adoptable</span>
     <span class="stat-pill"><b>$excluded</b> excluded, with reasons</span>
     <span class="stat-pill">verified <b>$checked</b></span>
   </div>
@@ -160,7 +174,10 @@ $chips</div>
 
 $sections
 
-<footer>Ranked lists go at least three deep by design: whatever gets chosen will eventually hit a wall, and
+<footer>A project that cannot be adopted is not the same as a project with nothing to give: an awkward licence
+or an absent maintainer rules out the code, never the architecture, the edge cases or the issue tracker.
+Copyright protects expression, not ideas — so those entries name what to take and where to take it from.
+<br><br>Ranked lists go at least three deep by design: whatever gets chosen will eventually hit a wall, and
 the next option needs to be already evaluated rather than researched again months later. Each entry carries
 why it sits where it does and the condition that would promote it.</footer>
 </div>

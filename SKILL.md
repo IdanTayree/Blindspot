@@ -209,9 +209,19 @@ with everything else: "log and terminal output", not "xterm".
 2. **Find candidates** for each, using search. Aim for a primary plus one or two alternatives.
 3. **Verify every candidate** by running `scripts/verify_repos.py` (see below). It returns real stars, last
    push date, licence, language and archived status from the GitHub API.
-4. **Check architecture fit and drop what cannot work.** A Linux-only sandbox is not a candidate for a macOS
-   app; a hosted SaaS is not a candidate when the requirement says local. This is where recalled lists fail
-   most often.
+4. **Check architecture fit — then, before rejecting anything, ask what you actually need from it.** A
+   Linux-only sandbox is not a candidate for a macOS app; a hosted SaaS is not a candidate when the
+   requirement says local. But failing as a *dependency* is not the same as being useless. An AGPL product
+   cannot be embedded, and its architecture and issue tracker are still free to read; an archived project
+   cannot be relied on, and it already solved the problem once. Very often the useful part is something the
+   user had not thought of at all — a state they never enumerated, a failure mode nobody planned for.
+
+   So every candidate gets one of **three** verdicts: **adopt** (goes in the ranked list), **consult**
+   (cannot be adopted, but read it for something specific and named), or **reject** (nothing to take).
+   **Reject should be the small category.** The rule that keeps this safe is that copyright protects
+   expression, not ideas: take the architecture, the edge-case list, the API shape — never the code, into a
+   project whose licence cannot carry it. `references/harvest.md` has the full boundary and how to write a
+   consult note that someone can actually action.
 5. **Produce a ranked list per component — at least three deep, numbered 1st, 2nd, 3rd.** Not a winner and a
    runner-up. The reason is practical: the chosen library will eventually hit a wall — a missing platform, a
    licence that does not fit, an abandoned maintainer, a feature it turns out not to have — and at that

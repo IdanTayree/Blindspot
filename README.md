@@ -206,6 +206,40 @@ app** — the kind of failure that costs days rather than credibility.
 So the rule for phase 2 is simple: **every number in the output was fetched.** Anything that could not be
 fetched is labelled unverified rather than filled in.
 
+### Three verdicts, not two
+
+The obvious way to handle an AGPL project, an archived one, or a model with a commercial licence is to
+exclude it. That throws away most of the value, because **failing as a dependency is not the same as being
+useless.**
+
+| Verdict | Meaning |
+|:--|:--|
+| **Adopt** | Licence, platform and maintenance all allow it. It goes in the ranked list. |
+| **Consult** | Cannot be adopted, but worth reading for something specific — named explicitly. |
+| **Reject** | Nothing to take. Wrong problem, or genuinely unsafe. |
+
+**Reject is the small category.** An AGPL product cannot be embedded, and its architecture and issue tracker
+are free to read. An archived project cannot be relied on, and it already solved the problem once. A
+commercially licensed model cannot ship, and the shape of its API is often the best available specification
+for the thing you are about to build. Frequently the useful part is something you had not thought of at
+all — a state you never enumerated, a failure mode nobody planned for.
+
+The line that keeps this safe is not a technicality: **copyright protects expression, not ideas.** Reading a
+public repository to understand how a problem was solved is ordinary engineering; copying its code into a
+project whose licence cannot carry it is not. So consults are sourced from documentation, issue trackers,
+changelogs and API shapes — in that order — and never by paraphrasing a file.
+
+The issue tracker is the most undervalued source in open source: a list of everything that went wrong in
+production, written by the people it happened to.
+
+A consult entry is worthless unless it names the extraction. Compare *"worth reading for inspiration"* with:
+
+> **Cannot adopt:** AGPL-3.0 — linking it in would force the whole project's licence.
+> **Take:** its cycles-and-modules model, a working answer to "what sits between a project and a task" — the
+> exact gap in the roadmap design. Read the product docs and the issues tagged `cycles`, not the source.
+
+The second is a task someone can finish in twenty minutes.
+
 ### Ranked at least three deep
 
 Every component gets a numbered list — not a winner and a runner-up. Whatever you pick will eventually hit a

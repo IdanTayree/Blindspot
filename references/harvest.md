@@ -83,11 +83,84 @@ Rules that follow from the output:
   the dashboard must say that explicitly.
 - No licence → treat as a blocker for anything the user intends to ship, and flag it.
 
-### 4. Check fit, and reject on it
+### 4. Check fit — and before rejecting anything, ask what you actually need from it
 
-For each surviving candidate, answer in one line: **can this actually run in the user's stack?** Platform,
-language, runtime dependency, and whether it is a library or a service. A candidate that fails fit is
-excluded with the reason stated — the exclusion is useful information, not clutter.
+For each surviving candidate, answer in one line: **can this run in the user's stack?** Platform, language,
+runtime dependency, library or service.
+
+Then, before writing anything off, stop and ask the question that recovers most of this phase's value:
+**what do we actually need from this project?**
+
+A candidate can fail as a *dependency* and still be the most useful thing in the list. An AGPL product cannot
+be embedded — but its architecture, its state machine, the edge cases in its issue tracker and the mistakes
+in its changelog are not encumbered by anything. An archived project cannot be relied on — but it already
+solved the problem once, and its README will tell you what was hard about it. A commercially licensed model
+cannot ship — but the shape of its API is often the best available specification for the thing you are about
+to build.
+
+Frequently the useful part is something the user had not thought of at all: a state they had not enumerated,
+a failure mode nobody planned for, a configuration knob that reveals a whole class of problem. That is the
+same job the interview does, aimed at a repository.
+
+So every candidate gets one of **three verdicts**, not two:
+
+| Verdict | Meaning |
+|---|---|
+| **Adopt** | Licence, platform and maintenance all allow it. It goes in the ranked list. |
+| **Consult** | Cannot be adopted, but is worth reading for something specific — named explicitly. |
+| **Reject** | Nothing to take. Wrong problem, or genuinely unsafe. |
+
+**Reject is now the small category.** Most things that used to be excluded are consults.
+
+### 4a. What "consult" is allowed to mean
+
+The line that matters, and it is not a technicality: **copyright protects expression, not ideas.** Reading a
+public repository to understand how a problem is solved is ordinary engineering. Copying its code into a
+project whose licence cannot carry it is not.
+
+Where to take from, in order of safety:
+
+1. **Documentation, README, architecture notes, ADRs.** Written to be read and explain the thinking directly.
+2. **The issue tracker.** The single most undervalued source in open source — it is a list of everything that
+   went wrong in production, written by the people it happened to. Nothing there is encumbered, and it is
+   usually the fastest way to learn a problem's real edge cases.
+3. **Changelogs and release notes.** What they had to fix, and in what order they discovered it.
+4. **Public API shape and protocol.** Interfaces and protocols are not creative expression in the way an
+   implementation is, and matching one is often the point.
+5. **The source itself** — last, and with care.
+
+What must not happen, stated plainly because the cost of getting it wrong is real:
+
+- **Never copy code, comments or distinctive structure** from a source whose licence the project cannot
+  carry. Not "adapted", not "with the variable names changed" — that is the same file wearing a hat.
+- **Do not paraphrase a file line by line.** Writing the same code from memory immediately after reading it
+  produces a derivative work regardless of intent.
+- **Take a list, write your own implementation.** "Their retry logic handles these six failure modes" is a
+  requirement. Their retry function is their code.
+- **When the ideas came from reading source rather than docs, say so** in the note, so a maintainer can make
+  a judgement later rather than discovering it.
+
+For an **unlicensed** repository — GitHub reporting no licence means all rights reserved, not public domain —
+read the repository anyway before concluding: a `LICENSE` file GitHub failed to classify is common, and
+`verify_repos.py` flags that case separately as *present but unrecognised*. Ask the maintainer if it matters;
+an issue asking "what licence is this under?" is answered often enough to be worth the minute.
+
+### 4b. Writing a useful consult note
+
+A consult entry is worthless unless it names the extraction. Compare:
+
+> ~~Worth reading for inspiration.~~
+
+against:
+
+> **Take:** its booking state machine — six states where we had assumed three — and the twelve issues tagged
+> `timezone`, which enumerate failure modes we have not planned for. Read the docs and issues, not the source;
+> AGPL, so nothing may be copied.
+
+The second is a task someone can do in twenty minutes. The first is a note nobody will ever action.
+
+Every consult carries three things: **why it cannot be adopted**, **what specifically to take**, and **where
+to take it from**.
 
 ### 5. Rank at least three deep, and keep what you demote
 

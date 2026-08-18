@@ -129,6 +129,19 @@ ol.cands { list-style:none; margin:0; padding:0; }
 .promote b { color:var(--accent-cyan); font-weight:600; }
 .fit b { color:var(--text-muted); font-weight:600; }
 
+.consult { margin-top:18px; border:1px solid rgba(6,182,212,.22); background:rgba(6,182,212,.05);
+  border-radius:var(--radius-md); padding:13px 16px; }
+.consult summary { cursor:pointer; font-size:12.5px; color:var(--accent-cyan); font-weight:600; }
+.consult summary:focus-visible { outline:2px solid var(--accent-cyan); outline-offset:3px; }
+.consult ul { margin:12px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:13px; }
+.consult li { padding-left:13px; border-left:2px solid rgba(6,182,212,.3); }
+.cname { font-family:var(--mono); font-size:13px; display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+.cname a { color:var(--text-main); text-decoration:none; border-bottom:1px solid var(--border-accent); }
+.cname a:hover { color:var(--accent-cyan); }
+.whynot, .take { margin:5px 0 0; font-size:12.5px; color:var(--text-muted); }
+.whynot b { color:var(--accent-amber); font-weight:600; }
+.take b { color:var(--accent-cyan); font-weight:600; }
+
 .excluded { margin-top:16px; border-top:1px dashed var(--border-subtle); padding-top:14px; }
 .excluded summary { cursor:pointer; font-size:12.5px; color:var(--accent-rose); }
 .excluded summary:focus-visible { outline:2px solid var(--accent-indigo); outline-offset:3px; }
@@ -145,7 +158,8 @@ footer { margin-top:38px; padding-top:20px; border-top:1px solid var(--border-su
   <div class="meta">
     <span class="stat-pill"><b>12</b> components</span>
     <span class="stat-pill"><b>52</b> ranked candidates</span>
-    <span class="stat-pill"><b>9</b> excluded, with reasons</span>
+    <span class="stat-pill"><b>6</b> worth reading, not adoptable</span>
+    <span class="stat-pill"><b>5</b> excluded, with reasons</span>
     <span class="stat-pill">verified <b>2026-08-14</b></span>
   </div>
 </header>
@@ -324,8 +338,7 @@ Target stack: Rust · desktop shell · local inference · Apple Silicon, local-f
       <p class="why"><b>Why 6:</b> Strong syscall-level isolation, but Linux-only and operationally complex.</p>
       <p class="promote"><b>Promote when:</b> Promote only on a Linux deployment with a hard multi-tenant requirement.</p>
       <p class="fit"><b>Fit:</b> Go, Linux only.</p>
-    </div></li></ol><details class="excluded"><summary>Excluded — 2</summary><ul><li><b>containers/bubblewrap</b> — Linux namespaces — cannot run on macOS at all. It was the previous dashboard&#x27;s recommendation for this component.</li>
-<li><b>macOS Seatbelt (sandbox-exec)</b> — Not a repository: it ships with macOS. Still the cheapest real boundary for a local process, and the intended floor here.</li></ul></details></section>
+    </div></li></ol><details class="consult" open><summary>Cannot adopt, worth reading — 1</summary><ul><li><div class="cname"><a href="https://github.com/containers/bubblewrap" target="_blank" rel="noopener">containers/bubblewrap</a><span class="badge">8,361 ★</span><span class="badge warn">no licence detected</span></div><p class="whynot"><b>Cannot adopt:</b> Linux namespaces — it cannot run on macOS at all, whatever its licence says.</p><p class="take"><b>Take:</b> Its capability-drop list and default-deny profile, which is a ready-made checklist of what the Seatbelt profile has to forbid. Read the man page and the default profiles, not the C.</p></li></ul></details><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>macOS Seatbelt (sandbox-exec)</b> — Not a repository: it ships with macOS. Still the cheapest real boundary for a local process, and the intended floor here.</li></ul></details></section>
 <section class="component" data-id="guardrails">
           <header><h2>Guardrails &amp; admission control</h2>
           <p class="job">Constrain what a model may do, and refuse requests that fall outside policy.</p>
@@ -365,7 +378,7 @@ Target stack: Rust · desktop shell · local inference · Apple Silicon, local-f
       <p class="why"><b>Why 4:</b> A vulnerability scanner rather than a guard: it finds the holes instead of closing them, so it complements the rails above rather than replacing them.</p>
       <p class="promote"><b>Promote when:</b> Use alongside whichever rails ship, to test that they actually hold.</p>
       <p class="fit"><b>Fit:</b> Python, Apache-2.0. Testing tool, not a runtime dependency.</p>
-    </div></li></ol><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>protectai/llm-guard</b> — ARCHIVED. Looks healthy at a glance — 3.2k stars, pushed July 2026 — but the repository is archived and will not receive fixes.</li></ul></details></section>
+    </div></li></ol><details class="consult" open><summary>Cannot adopt, worth reading — 1</summary><ul><li><div class="cname"><a href="https://github.com/protectai/llm-guard" target="_blank" rel="noopener">protectai/llm-guard</a><span class="badge">3,202 ★</span><span class="badge ">MIT</span><span class="badge bad">archived</span></div><p class="whynot"><b>Cannot adopt:</b> Archived — it will not receive fixes, so it cannot be a dependency.</p><p class="take"><b>Take:</b> Its scanner taxonomy: the named list of attack classes it detects is the best free checklist of what a guardrail has to cover. Read the README&#x27;s scanner table and turn it into requirements.</p></li></ul></details></section>
 <section class="component" data-id="skills">
           <header><h2>Skills library &amp; tool registry</h2>
           <p class="job">A library of skill files and tools that agents invoke at run time.</p>
@@ -454,8 +467,7 @@ Target stack: Rust · desktop shell · local inference · Apple Silicon, local-f
       <p class="why"><b>Why 4:</b> A service wrapper around openWakeWord with a clean protocol, which removes the binding work — but it is small, and adds a process to supervise.</p>
       <p class="promote"><b>Promote when:</b> Promote if you would rather speak to a local service than embed a Python model in the shell.</p>
       <p class="fit"><b>Fit:</b> Python, Apache-2.0. Adds a supervised process.</p>
-    </div></li></ol><details class="excluded"><summary>Excluded — 3</summary><ul><li><b>MycroftAI/mycroft-precise</b> — Last pushed November 2023 — effectively abandoned, and the parent project shut down.</li>
-<li><b>kahrendt/microWakeWord</b> — The slug resolves to a 4-star repository, which does not match the known project — treat as unverified and search again before considering it.</li>
+    </div></li></ol><details class="consult" open><summary>Cannot adopt, worth reading — 1</summary><ul><li><div class="cname"><a href="https://github.com/MycroftAI/mycroft-precise" target="_blank" rel="noopener">MycroftAI/mycroft-precise</a><span class="badge">964 ★</span><span class="badge ">Apache-2.0</span></div><p class="whynot"><b>Cannot adopt:</b> Last pushed November 2023 and the parent company shut down — nothing here is maintained.</p><p class="take"><b>Take:</b> Its training pipeline for a custom wake word: how many samples, how they were augmented, and how false-accept rate was measured. That measurement method is the part nobody writes down, and it is in the README.</p></li></ul></details><details class="excluded"><summary>Excluded — 2</summary><ul><li><b>kahrendt/microWakeWord</b> — The slug resolves to a 4-star repository, which does not match the known project — treat as unverified and search again before considering it.</li>
 <li><b>Kitt-AI/snowboy</b> — Last pushed October 2021 and the company shut down; the hosted training service it depended on is gone.</li></ul></details></section>
 <section class="component" data-id="screen">
           <header><h2>Screen &amp; GUI understanding</h2>
@@ -569,23 +581,24 @@ Target stack: Rust · desktop shell · local inference · Apple Silicon, local-f
       <p class="fit"><b>Fit:</b> JavaScript, MIT. Works anywhere.</p>
     </div></li>
 <li class="cand"><div class="rank">3</div><div class="body">
-      <div class="name"><a href="https://github.com/makeplane/plane" target="_blank" rel="noopener">makeplane/plane</a></div>
-      <div class="facts"><span class="stat"><b>55,956</b> stars</span>
-        <span class="badge active">active · 2026-08-13</span><span class="badge ">AGPL-3.0</span><span class="lang">TypeScript</span></div>
-      <p class="desc">🔥🔥🔥 Open-source Jira, Linear, Monday, and ClickUp alternative. Plane is a modern project management platform to manage tasks, sprints, docs, and triage.</p>
-      <p class="why"><b>Why 3:</b> A complete project management product with cycles, modules and roadmaps — a rich source of interaction ideas, but AGPL-3.0, which would force the licence of anything it is linked into.</p>
-      <p class="promote"><b>Promote when:</b> Promote only as a reference to study, never as an embedded dependency.</p>
-      <p class="fit"><b>Fit:</b> TypeScript, AGPL-3.0. Licence blocks embedding.</p>
+      <div class="name"><a href="https://github.com/atlassian/pragmatic-drag-and-drop" target="_blank" rel="noopener">atlassian/pragmatic-drag-and-drop</a></div>
+      <div class="facts"><span class="stat"><b>12,730</b> stars</span>
+        <span class="badge active">active · 2026-08-18</span><span class="badge warn">no licence detected</span><span class="lang">TypeScript</span></div>
+      <p class="desc">Fast drag and drop for any experience on any tech stack</p>
+      <p class="why"><b>Why 3:</b> Atlassian&#x27;s own drag primitive, extracted from Jira and Trello — framework-agnostic, built on native HTML drag-and-drop so it is fast on long boards. No licence detected at repo level, which needs checking before shipping.</p>
+      <p class="promote"><b>Promote when:</b> Promote above dnd-kit if board performance with hundreds of tasks becomes the problem.</p>
+      <p class="fit"><b>Fit:</b> TypeScript, framework-agnostic. Drops into the existing shell.</p>
     </div></li>
 <li class="cand"><div class="rank">4</div><div class="body">
-      <div class="name"><a href="https://github.com/AppFlowy-IO/AppFlowy" target="_blank" rel="noopener">AppFlowy-IO/AppFlowy</a></div>
-      <div class="facts"><span class="stat"><b>75,369</b> stars</span>
-        <span class="badge active">active · 2026-08-11</span><span class="badge ">AGPL-3.0</span><span class="lang">Dart</span></div>
-      <p class="desc">Bring projects, wikis, and teams together with AI. AppFlowy is the AI collaborative workspace where you achieve more without losing control of your data. The leading open source Notion alternative.</p>
-      <p class="why"><b>Why 4:</b> Beautiful local-first workspace with kanban and boards, and a Rust core — but it is Flutter and also AGPL-3.0.</p>
-      <p class="promote"><b>Promote when:</b> Promote as a design reference for local-first boards; the licence rules it out as a dependency.</p>
-      <p class="fit"><b>Fit:</b> Dart/Flutter + Rust, AGPL-3.0. Reference only.</p>
-    </div></li></ol></section>
+      <div class="name"><a href="https://github.com/hello-pangea/dnd" target="_blank" rel="noopener">hello-pangea/dnd</a></div>
+      <div class="facts"><span class="stat"><b>4,009</b> stars</span>
+        <span class="badge active">active · 2026-08-15</span><span class="badge warn">no licence detected</span><span class="lang">TypeScript</span></div>
+      <p class="desc">💅 Beautiful and accessible drag and drop for lists with React. ⭐️ Star to support our work!</p>
+      <p class="why"><b>Why 4:</b> The maintained fork of react-beautiful-dnd, with the most familiar API of the three — but list-only, so it will not do a freeform canvas.</p>
+      <p class="promote"><b>Promote when:</b> Promote if the cockpit stays strictly list-and-column shaped and speed of implementation matters most.</p>
+      <p class="fit"><b>Fit:</b> React, TypeScript. Highest familiarity, narrowest scope.</p>
+    </div></li></ol><details class="consult" open><summary>Cannot adopt, worth reading — 2</summary><ul><li><div class="cname"><a href="https://github.com/makeplane/plane" target="_blank" rel="noopener">makeplane/plane</a><span class="badge">55,956 ★</span><span class="badge ">AGPL-3.0</span></div><p class="whynot"><b>Cannot adopt:</b> AGPL-3.0 — linking it into a non-AGPL app would force the whole project&#x27;s licence.</p><p class="take"><b>Take:</b> Its cycles-and-modules model, which is a working answer to &#x27;what sits between a project and a task&#x27; — the exact gap in the roadmap design. Read the product docs and the issues tagged `cycles`, not the source.</p></li>
+<li><div class="cname"><a href="https://github.com/AppFlowy-IO/AppFlowy" target="_blank" rel="noopener">AppFlowy-IO/AppFlowy</a><span class="badge">75,369 ★</span><span class="badge ">AGPL-3.0</span></div><p class="whynot"><b>Cannot adopt:</b> AGPL-3.0, and Flutter rather than the target stack.</p><p class="take"><b>Take:</b> How a local-first board handles conflict when the same card is edited in two places — read their sync design notes and the issues tagged `sync`. That question is unanswered in this project and will arrive with the phone.</p></li></ul></details></section>
 <section class="component" data-id="presence">
           <header><h2>Presence detection</h2>
           <p class="job">Open the mic when he is at the machine, and close it when he is not — without using the camera.</p>
@@ -687,9 +700,12 @@ Target stack: Rust · desktop shell · local inference · Apple Silicon, local-f
       <p class="why"><b>Why 3:</b> The specification the existing relay implements — essential reading for anything touching sync, but not an implementation.</p>
       <p class="promote"><b>Promote when:</b> Never promotes to a dependency.</p>
       <p class="fit"><b>Fit:</b> Specification. Reference material.</p>
-    </div></li></ol><details class="excluded"><summary>Excluded — 1</summary><ul><li><b>fiatjaf/khatru</b> — ARCHIVED. A well-regarded Go relay framework, but archived in September 2025 — it would have looked like a reasonable pick from memory.</li></ul></details></section>
+    </div></li></ol><details class="consult" open><summary>Cannot adopt, worth reading — 1</summary><ul><li><div class="cname"><a href="https://github.com/fiatjaf/khatru" target="_blank" rel="noopener">fiatjaf/khatru</a><span class="badge">140 ★</span><span class="badge ">Unlicense</span><span class="badge bad">archived</span></div><p class="whynot"><b>Cannot adopt:</b> Archived in September 2025.</p><p class="take"><b>Take:</b> Its policy-hook design — the set of decision points a relay needs before accepting an event. That list is the specification for the self-hosted relay, and it is in the README rather than the Go.</p></li></ul></details></section>
 
-<footer>Ranked lists go at least three deep by design: whatever gets chosen will eventually hit a wall, and
+<footer>A project that cannot be adopted is not the same as a project with nothing to give: an awkward licence
+or an absent maintainer rules out the code, never the architecture, the edge cases or the issue tracker.
+Copyright protects expression, not ideas — so those entries name what to take and where to take it from.
+<br><br>Ranked lists go at least three deep by design: whatever gets chosen will eventually hit a wall, and
 the next option needs to be already evaluated rather than researched again months later. Each entry carries
 why it sits where it does and the condition that would promote it.</footer>
 </div>

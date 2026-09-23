@@ -37,3 +37,6 @@ exit 0
 $ git diff --check
 exit 0
 ```
+
+Implementation commit: `979c6cb`. Recorded in this separate follow-up commit.
+`git merge-base --is-ancestor 979c6cb HEAD`: exit 0.

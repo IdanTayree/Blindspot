@@ -266,3 +266,14 @@ The user ends with two artefacts:
 
 Neither is a report about them; both are documents they can hand to whoever builds the thing, including
 themselves.
+
+## Handing the blueprint onward
+
+**[Night Watch](https://github.com/IdanTayree/night-watch)** turns a settled plan into work that runs
+unattended. The seam is worth stating when this skill finishes: **the blueprint's decisions can
+become a night queue; its open questions cannot.** Open questions are exactly what an unattended
+shift has no way to resolve, so they stay day work — and the verified components go across with their
+licences already checked, because a night shift should never be choosing a dependency.
+
+If the user asks what to do with the blueprint next, that is the honest answer: settle the open
+questions, then decompose the decisions into phases a gate can prove.

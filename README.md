@@ -11,7 +11,7 @@ and what you never thought of at all.
 
 One question at a time, until the unknowns run out. Then real components, with real numbers.
 
-[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Hunt scope](#two-scopes-asked-before-searching) · [Why it verifies](#why-the-harvest-verifies-everything) · [Examples](examples/)
+[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Hunt scope](#two-scopes-asked-before-searching) · [With Night Watch](#pairs-with-night-watch) · [Examples](examples/)
 
 </div>
 
@@ -250,6 +250,31 @@ forgotten.
 So each entry carries two lines: **why it sits at this position**, and **what would promote it** — the
 condition that should make you switch. Nothing is ever silently dropped; excluded candidates keep their
 reasons, so the same dead end is not investigated twice.
+
+## Pairs with Night Watch
+
+A blueprint answers *what are we building*. It does not answer *how does it get built* — and the
+honest version of that question, for anyone working alone, is **how does it get built while I sleep.**
+
+**[Night Watch](https://github.com/IdanTayree/night-watch)** is the other half: it splits a project
+into a day shift that needs you and a night shift that does not, then makes the unattended half
+falsifiable rather than merely plausible.
+
+The seam between the two is exact, and it is the reason they fit:
+
+> **This skill produces two lists — decisions, and open questions. Open questions are precisely what
+> must never enter an unattended queue.**
+
+So a blueprint is the right input to a night shift, and its unresolved section is, by construction,
+the next day's work. Three things carry straight across:
+
+| from a blueprint | into a night shift |
+|:--|:--|
+| a decision that implies work | a phase, split until a gate can prove it |
+| a **verified** component, licence and all | a dependency already chosen — a night shift must never be picking one |
+| an open question, or an uncorrected assumption | day work, by definition |
+
+Use this skill while the shape of the thing is still in question. Use Night Watch once it is not.
 
 ## Install
 

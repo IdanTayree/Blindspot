@@ -179,7 +179,11 @@ def build(spec: dict, verified: list, template_path: Path | None = None) -> str:
           <ol class="cands">{items}</ol>{consult_block}{block}</section>""")
 
     chips = "\n".join(
-        f'<button class="chip" data-filter="{esc(c.get("id",""))}">{esc(c.get("title",""))}</button>'
+        # `type` and `aria-pressed` on every generated chip, not just the hardcoded "All":
+        # without them a screen reader hears "button" with no state, while a sighted reader sees
+        # the active filter from a CSS class. The template's click handler keeps them in sync.
+        f'<button class="chip" type="button" aria-pressed="false" '
+        f'data-filter="{esc(c.get("id",""))}">{esc(c.get("title",""))}</button>'
         for c in spec.get("components", []))
 
     return Template(load_template(template_path)).safe_substitute(

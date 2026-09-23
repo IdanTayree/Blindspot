@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blindspot"
+  short_description: "Resolve planning gaps and verify reusable components"
+  default_prompt: "Use $blindspot for this project, starting with the files and tools available."

@@ -68,7 +68,7 @@ is a component with no fallback.
 ### 3. Verify — always, with the script
 
 ```bash
-python3 scripts/verify_repos.py owner/repo another/repo > verified.json
+python3 scripts/verify_repos.py --strict owner/repo another/repo > verified.json
 ```
 
 Returns per repo: `stars`, `pushed_at`, `days_since_push`, `license`, `language`, `archived`, `open_issues`,
@@ -91,12 +91,9 @@ runtime dependency, library or service.
 Then, before writing anything off, stop and ask the question that recovers most of this phase's value:
 **what do we actually need from this project?**
 
-A candidate can fail as a *dependency* and still be the most useful thing in the list. An AGPL product cannot
-be embedded — but its architecture, its state machine, the edge cases in its issue tracker and the mistakes
-in its changelog are not encumbered by anything. An archived project cannot be relied on — but it already
-solved the problem once, and its README will tell you what was hard about it. A commercially licensed model
-cannot ship — but the shape of its API is often the best available specification for the thing you are about
-to build.
+A candidate can fail as a dependency and still offer useful documented behavior or failure cases.
+Adoption depends on this project's requirements and the actual terms; AGPL, commercial licensing and
+archived status are not blanket accept/reject decisions. Record the specific constraint.
 
 Frequently the useful part is something the user had not thought of at all: a state they had not enumerated,
 a failure mode nobody planned for, a configuration knob that reveals a whole class of problem. That is the
@@ -114,20 +111,10 @@ So every candidate gets one of **three verdicts**, not two:
 
 ### 4a. What "consult" is allowed to mean
 
-The line that matters, and it is not a technicality: **copyright protects expression, not ideas.** Reading a
-public repository to understand how a problem is solved is ordinary engineering. Copying its code into a
-project whose licence cannot carry it is not.
-
-Where to take from, in order of safety:
-
-1. **Documentation, README, architecture notes, ADRs.** Written to be read and explain the thinking directly.
-2. **The issue tracker.** The single most undervalued source in open source — it is a list of everything that
-   went wrong in production, written by the people it happened to. Nothing there is encumbered, and it is
-   usually the fastest way to learn a problem's real edge cases.
-3. **Changelogs and release notes.** What they had to fix, and in what order they discovered it.
-4. **Public API shape and protocol.** Interfaces and protocols are not creative expression in the way an
-   implementation is, and matching one is often the point.
-5. **The source itself** — last, and with care.
+Consult means learning from identified public sources, not receiving permission to copy them.
+Prefer documentation, issue discussions, changelogs and API documentation before implementation code.
+Check terms before reusing code, prose or distinctive structure; public visibility and a metadata
+license label are not legal clearance. Cite the source and state unresolved compatibility questions.
 
 What must not happen, stated plainly because the cost of getting it wrong is real:
 
@@ -231,3 +218,12 @@ Alongside the dashboard, give a short summary in the conversation:
 - anything excluded for a reason they might disagree with, so they can overrule it
 
 Keep it to a screen. The dashboard holds the detail.
+
+## Metadata verification limits
+
+`--strict` exits 1 when any lookup is unverified, while still emitting the JSON results; invalid or
+empty input exits 2. Without `--strict`, exploratory lookups retain exit 0 with labelled failures.
+Always use strict mode for an acceptance gate. Metadata verification is not a security audit or
+license clearance. Inspect the actual license and dependency/install path before adoption; popularity
+and a recent push do not establish safety. A present but unrecognized license remains distinct from
+a missing license in the dashboard.

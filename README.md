@@ -4,7 +4,7 @@
 
 # Blindspot
 
-**A Claude skill that turns an idea — or a half-planned project — into something you can actually build.**
+**A skill for Claude, ChatGPT and Codex that turns an idea — or a half-planned project — into something you can actually build.**
 
 Named for what it hunts: the two things nobody can self-report — what you assumed was too obvious to say,
 and what you never thought of at all.
@@ -218,23 +218,22 @@ useless.**
 | **Consult** | Cannot be adopted, but worth reading for something specific — named explicitly. |
 | **Reject** | Nothing to take. Wrong problem, or genuinely unsafe. |
 
-**Reject is the small category.** An AGPL product cannot be embedded, and its architecture and issue tracker
-are free to read. An archived project cannot be relied on, and it already solved the problem once. A
-commercially licensed model cannot ship, and the shape of its API is often the best available specification
-for the thing you are about to build. Frequently the useful part is something you had not thought of at
-all — a state you never enumerated, a failure mode nobody planned for.
+**Reject is the small category.** A dependency that does not fit this project's license,
+platform or maintenance requirements may still have useful public documentation and failure reports.
+Determine adoption case by case: AGPL, commercial terms or archived status are not universal verdicts.
+Record the actual constraint and evidence behind each decision.
 
-The line that keeps this safe is not a technicality: **copyright protects expression, not ideas.** Reading a
-public repository to understand how a problem was solved is ordinary engineering; copying its code into a
-project whose licence cannot carry it is not. So consults are sourced from documentation, issue trackers,
-changelogs and API shapes — in that order — and never by paraphrasing a file.
+A consult recommendation identifies what to learn and links its source. It is not permission to copy
+code, text or distinctive structure. Check applicable terms before reuse; GitHub license metadata
+alone does not settle compatibility. Prefer documentation, issue discussions and release notes for
+understanding behavior, with attribution where appropriate.
 
 The issue tracker is the most undervalued source in open source: a list of everything that went wrong in
 production, written by the people it happened to.
 
 A consult entry is worthless unless it names the extraction. Compare *"worth reading for inspiration"* with:
 
-> **Cannot adopt:** AGPL-3.0 — linking it in would force the whole project's licence.
+> **Cannot adopt for this project:** the current license requirements have not been shown compatible with this dependency; adoption remains unapproved.
 > **Take:** its cycles-and-modules model, a working answer to "what sits between a project and a task" — the
 > exact gap in the roadmap design. Read the product docs and the issues tagged `cycles`, not the source.
 
@@ -278,21 +277,46 @@ Use this skill while the shape of the thing is still in question. Use Night Watc
 
 ## Install
 
+### Claude Code
+
 ```bash
 git clone https://github.com/IdanTayree/Blindspot.git ~/.claude/skills/blindspot
 ```
 
-Then start a Claude session and describe an idea. It triggers on things like *"I want to build…"*, *"help me
-spec this"*, *"turn my idea into a plan"*, a request for a PRD — or *"this was never really planned
-properly"*.
+### ChatGPT desktop and Codex
+
+Use the skill installer with this repository URL, or place the complete skill folder in a supported
+local skills directory. For Codex user-level discovery:
+
+```bash
+git clone https://github.com/IdanTayree/Blindspot.git ~/.agents/skills/blindspot
+```
+
+If that directory already exists, review/update it instead of overwriting it. In ChatGPT's skill
+picker mention `@blindspot`; in Codex use `$blindspot`. Actual availability depends on the host and workspace.
+
+### ChatGPT in a conversation or Project
+
+Upload `SKILL.md` and the files under `references/`, then say:
+
+> Use Blindspot from the uploaded instructions. First check which tools and project files you can
+> actually access. Follow the applicable workflow and clearly label anything you cannot verify.
+
+For a dashboard, also provide the scripts and assets/dashboard_template.html when code execution is available. Uploads alone do not grant access to your Mac or start a background worker.
+[Host capabilities and fallbacks](references/platforms.md) explain the supported modes.
+These are portable skills, not published ChatGPT marketplace plugins. Web/mobile native distribution
+can use OpenAI's plugin packaging process; that is separate from uploading instructions to a Project.
+
+Official guidance checked 2026-09-23: [skills and local discovery](https://learn.chatgpt.com/docs/build-skills),
+[Projects and uploaded instructions](https://help.openai.com/en/articles/10169521-projects-in-chatgpt).
 
 ## Using the verifier on its own
 
 No dependencies beyond Python 3:
 
 ```bash
-python3 scripts/verify_repos.py langchain-ai/langgraph crewAIInc/crewAI > verified.json
-python3 scripts/verify_repos.py --file repos.txt        # one owner/repo per line
+python3 scripts/verify_repos.py --strict langchain-ai/langgraph crewAIInc/crewAI > verified.json
+python3 scripts/verify_repos.py --strict --file repos.txt        # one owner/repo per line
 ```
 
 Returns stars, last push date, freshness, licence, language and archived status. It uses the `gh` CLI when
@@ -332,3 +356,20 @@ consistent instead of being reinvented per run — and reskinning means editing 
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
+
+## Metadata verification limits
+
+`--strict` exits 1 when any lookup is unverified, while still emitting the JSON results; invalid or
+empty input exits 2. Without `--strict`, exploratory lookups retain exit 0 with labelled failures.
+Always use strict mode for an acceptance gate. Metadata verification is not a security audit or
+license clearance. Inspect the actual license and dependency/install path before adoption; popularity
+and a recent push do not establish safety. A present but unrecognized license remains distinct from
+a missing license in the dashboard.
+
+## Tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+The suite uses mocked API responses and parses rendered HTML; it does not require credentials or network.

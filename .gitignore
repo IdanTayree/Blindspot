@@ -3,3 +3,5 @@ __pycache__/
 .DS_Store
 *.skill
 !assets/*.png
+*.py[cod]
+.night-watch/

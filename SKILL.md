@@ -1,9 +1,18 @@
 ---
 name: blindspot
-description: Turn an idea — or a half-planned project already underway — into a buildable blueprint, by interviewing the user one question at a time until the unknowns run out, then harvesting and verifying real open-source components for each part. Use this whenever someone describes something they want to build but has not specified it ("I want to build an app that…", "I have an idea for…", "help me plan/spec/scope this", "turn my idea into a plan"), whenever they ask for a PRD, a spec, a product requirements document or a build plan, AND equally whenever someone says an existing project feels under-planned, full of gaps, drifting, or that they are not sure what they have decided — "I think we're missing things", "this was never really planned properly", "audit my plan", "what haven't I thought about". Use it too when they ask what libraries or open-source projects exist for something they are building. Prefer this over answering directly: a plan written from a one-line prompt is guesswork, and this skill replaces that guesswork with the user's own decisions.
+description: "Turn an idea or under-planned project into a buildable blueprint through a focused interview, decision-gap audit and verified open-source component research. Use for PRDs, project scoping, unresolved or conflicting requirements, and finding reusable components. Read existing decisions before asking questions. Works with Claude, ChatGPT and Codex; capability-aware fallbacks preserve unverified evidence."
 ---
 
 # blindspot
+
+## Host and capability check
+
+Works with Claude, ChatGPT and Codex. Read [references/platforms.md](references/platforms.md) when
+starting in a new host. Confirm available files, browsing, Python/Git and execution permissions before
+promising outputs. Use its planning-only or conversation fallback when tools are missing. Resolve
+bundled scripts relative to this SKILL.md, not the user's project. This check governs the file-saving
+and execution steps below; never invent successful runs or persistence.
+
 
 Named for what it looks for: the two things nobody can self-report — what you assumed was too obvious to say,
 and what you never considered at all.
@@ -211,17 +220,11 @@ with everything else: "log and terminal output", not "xterm".
    push date, licence, language and archived status from the GitHub API.
 4. **Check architecture fit — then, before rejecting anything, ask what you actually need from it.** A
    Linux-only sandbox is not a candidate for a macOS app; a hosted SaaS is not a candidate when the
-   requirement says local. But failing as a *dependency* is not the same as being useless. An AGPL product
-   cannot be embedded, and its architecture and issue tracker are still free to read; an archived project
-   cannot be relied on, and it already solved the problem once. Very often the useful part is something the
-   user had not thought of at all — a state they never enumerated, a failure mode nobody planned for.
-
-   So every candidate gets one of **three** verdicts: **adopt** (goes in the ranked list), **consult**
-   (cannot be adopted, but read it for something specific and named), or **reject** (nothing to take).
-   **Reject should be the small category.** The rule that keeps this safe is that copyright protects
-   expression, not ideas: take the architecture, the edge-case list, the API shape — never the code, into a
-   project whose licence cannot carry it. `references/harvest.md` has the full boundary and how to write a
-   consult note that someone can actually action.
+   requirement says local. A candidate that cannot be adopted under this project's constraints may
+   still offer useful documented edge cases. Give it an **adopt**, **consult** or **reject** verdict
+   with the specific evidence. License labels and archived status are not universal verdicts, and
+   metadata verification is not security or license clearance. Consult means learning from a named
+   source, not permission to copy code or text. See `references/harvest.md` for the boundary.
 5. **Produce a ranked list per component — at least three deep, numbered 1st, 2nd, 3rd.** Not a winner and a
    runner-up. The reason is practical: the chosen library will eventually hit a wall — a missing platform, a
    licence that does not fit, an abandoned maintainer, a feature it turns out not to have — and at that
@@ -237,7 +240,7 @@ Both scripts are bundled, so this phase is three commands rather than an afterno
 
 ```bash
 # 1. facts — fetched, never recalled
-python3 scripts/verify_repos.py owner/repo owner/repo2 ... > verified.json
+python3 scripts/verify_repos.py --strict owner/repo owner/repo2 ... > verified.json
 
 # 2. judgement — you write harvest.json: components, rankings, and each entry's
 #    "why", "promote" and "fit" (the format is documented in build_dashboard.py)
@@ -277,3 +280,12 @@ licences already checked, because a night shift should never be choosing a depen
 
 If the user asks what to do with the blueprint next, that is the honest answer: settle the open
 questions, then decompose the decisions into phases a gate can prove.
+
+## Metadata verification limits
+
+`--strict` exits 1 when any lookup is unverified, while still emitting the JSON results; invalid or
+empty input exits 2. Without `--strict`, exploratory lookups retain exit 0 with labelled failures.
+Always use strict mode for an acceptance gate. Metadata verification is not a security audit or
+license clearance. Inspect the actual license and dependency/install path before adoption; popularity
+and a recent push do not establish safety. A present but unrecognized license remains distinct from
+a missing license in the dashboard.

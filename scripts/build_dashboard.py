@@ -60,25 +60,42 @@ import json
 import sys
 from pathlib import Path
 from string import Template
+from verify_repos import slug as repository_slug
 
 
 def esc(value) -> str:
     return html.escape(str(value), quote=True)
 
 
+def license_label(row):
+    return row.get("license") or row.get("license_note") or "no licence detected"
+
+
+def repo_link(row):
+    # Never trust supplied hrefs: a dashboard is executable HTML opened by the user.
+    return "https://github.com/" + repository_slug(row["repo"])
+
+
 def index(verified: list) -> dict:
     """Look-up by canonical name *and* by the slug asked for, so renames resolve either way."""
     out = {}
     for row in verified:
-        if row.get("verified"):
+        if (isinstance(row, dict) and row.get("verified") is True and
+                isinstance(row.get("repo"), str) and repository_slug(row["repo"]) and
+                type(row.get("stars")) is int and row["stars"] >= 0):
+            row = dict(row)
+            row["repo"] = repository_slug(row["repo"])
+            row["freshness"] = row.get("freshness") if row.get("freshness") in ("active", "maintained", "stale", "unknown") else "unknown"
             out.setdefault(row["repo"].lower(), row)
-            out.setdefault(row["input"].lower(), row)
+            alias = repository_slug(row.get("input", ""))
+            if alias:
+                out.setdefault(alias.lower(), row)
     return out
 
 
 def candidate_html(rank: int, entry: dict, repos: dict) -> str:
     slug = entry.get("repo", "")
-    row = repos.get(slug.lower())
+    row = repos.get((repository_slug(slug) or slug).lower())
     why = esc(entry.get("why", ""))
     promote = esc(entry.get("promote", ""))
     fit = esc(entry.get("fit", ""))
@@ -92,7 +109,7 @@ def candidate_html(rank: int, entry: dict, repos: dict) -> str:
         </div></li>"""
 
     renamed = row["repo"].lower() != slug.lower()
-    licence = row.get("license") or "no licence detected"
+    licence = license_label(row)
     badges = [
         f'<span class="badge {row["freshness"]}">{row["freshness"]} · {esc((row.get("pushed_at") or "")[:10])}</span>',
         f'<span class="badge {"warn" if not row.get("license") else ""}">{esc(licence)}</span>',
@@ -102,7 +119,7 @@ def candidate_html(rank: int, entry: dict, repos: dict) -> str:
     moved = f'<span class="badge warn">moved from {esc(slug)}</span>' if renamed else ""
 
     return f"""<li class="cand"><div class="rank">{rank}</div><div class="body">
-      <div class="name"><a href="{esc(row['html_url'])}" target="_blank" rel="noopener">{esc(row['repo'])}</a>{moved}</div>
+      <div class="name"><a href="{esc(repo_link(row))}" target="_blank" rel="noopener">{esc(row['repo'])}</a>{moved}</div>
       <div class="facts"><span class="stat"><b>{row['stars']:,}</b> stars</span>
         {''.join(badges)}<span class="lang">{esc(row.get('language') or '—')}</span></div>
       <p class="desc">{esc(row.get('description') or '')}</p>
@@ -119,15 +136,15 @@ def consult_html(entry: dict, repos: dict) -> str:
     with an awkward licence or an abandoned maintainer, this is frequently where the useful part is.
     """
     slug = entry.get("repo", "")
-    row = repos.get(slug.lower())
+    row = repos.get((repository_slug(slug) or slug).lower())
     if row:
-        head = (f'<a href="{esc(row["html_url"])}" target="_blank" rel="noopener">{esc(row["repo"])}</a>'
+        head = (f'<a href="{esc(repo_link(row))}" target="_blank" rel="noopener">{esc(row["repo"])}</a>'
                 f'<span class="badge">{row["stars"]:,} ★</span>'
                 f'<span class="badge {"warn" if not row.get("license") else ""}">'
-                f'{esc(row.get("license") or "no licence detected")}</span>'
+                f'{esc(license_label(row))}</span>'
                 + ('<span class="badge bad">archived</span>' if row.get("archived") else ""))
     else:
-        head = esc(slug)
+        head = esc(slug) + ' <span class="badge warn">unverified</span>'
     return (f'<li><div class="cname">{head}</div>'
             f'<p class="whynot"><b>Cannot adopt:</b> {esc(entry.get("why_not", ""))}</p>'
             f'<p class="take"><b>Take:</b> {esc(entry.get("take", ""))}</p></li>')
@@ -147,7 +164,8 @@ def load_template(path: Path | None = None) -> str:
 
 def build(spec: dict, verified: list, template_path: Path | None = None) -> str:
     repos = index(verified)
-    checked = next((r.get("checked_at", "") for r in verified if r.get("verified")), "")
+    dates = sorted({str(r.get("checked_at") or "date unknown") for r in repos.values()})
+    checked = ", ".join(dates) if dates else "unverified"
 
     sections, ranked_total, excluded_total, consult_total = [], 0, 0, 0
     for comp in spec.get("components", []):

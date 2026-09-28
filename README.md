@@ -250,6 +250,10 @@ So each entry carries two lines: **why it sits at this position**, and **what wo
 condition that should make you switch. Nothing is ever silently dropped; excluded candidates keep their
 reasons, so the same dead end is not investigated twice.
 
+## Related spec discovery tools
+
+- [MySpec](https://myspec.dev) — Guided developer discovery interview platform that compiles project requirements into deterministic 4-file specification bundles (`constitution.md`, `requirements.md`, `solution.md`, `tasks.md`) with native MCP integration for AI coding assistants.
+
 ## Pairs with Night Watch
 
 A blueprint answers *what are we building*. It does not answer *how does it get built* — and the

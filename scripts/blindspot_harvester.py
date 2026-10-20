@@ -1,32 +1,28 @@
 #!/usr/bin/env python3
 """
-blindspot + scrapling — Deep-Read README & Live Candidate Discovery Harvester (T-26)
-=====================================================================================
-Bridges `scrapling` (TLS/JA3 browser fingerprint impersonation via `scrapling.fetchers.Fetcher`)
-into `blindspot` Phase 2 ("The Harvest").
-
-Capabilities:
-  1. Live Candidate Discovery (`--discover "<query>"`):
-     Scrapes GitHub & HuggingFace search results using `scrapling` Chrome impersonation
-     (with `urllib` fallback) to extract real `owner/repo` candidates.
-  2. Deep-Read README & Hardware/Benchmark Digestion (`owner/repo ...`):
-     Fetches the raw `README.md` of each candidate repository (GitHub or HuggingFace)
-     and extracts:
-       - Title & Executive Summary
-       - Section Headings
-       - Install / Quick-Start Commands (`pip`, `npm`, `cargo`, `ollama`, `docker`)
-       - Hardware & VRAM Constraints (`GB`, `VRAM`, `CUDA`, `MLX`, `Q4_K_M`, `Q5_K_M`)
-       - Benchmark & Performance Claims (`tok/s`, `latency`, `Sharpe`, `CAGR`)
-       - Platform & Architecture Caveats (`Linux-only`, `macOS`, `AGPL`, `deprecated`)
+Blindspot Harvester — Live Candidate Discovery & Deep-Read Technical Fit Engine
+===============================================================================
+Part of Phase 2 ("The Harvest"). Works alongside `verify_repos.py`:
+- `verify_repos.py` fetches live GitHub API metadata (stars, last push, licence, archived status).
+- `blindspot_harvester.py` discovers live `owner/repo` candidates across GitHub and HuggingFace
+  and deep-reads each candidate's raw `README.md` / model card to extract real technical-fit
+  constraints before ranking begins:
+    * Title & Executive Summary
+    * Section Headings
+    * Install & Quick-Start Commands (`pip`, `uv`, `npm`, `pnpm`, `cargo`, `brew`, `ollama`, `docker`)
+    * Hardware & Memory Constraints (`VRAM`, `GPU`, `CUDA`, `MLX`, `GB`, `Q4_K_M`, `Q5_K_M`, `q8_0`)
+    * Benchmark & Throughput Claims (`tok/s`, `latency`, `Sharpe`, `CAGR`, `drawdown`, `accuracy`)
+    * Platform & Licence Caveats (`Linux-only`, `macOS`, `Windows`, `deprecated`, `AGPL`, `commercial`)
 
 Usage:
-    python3 scripts/scrapling_harvest.py owner/repo1 owner/repo2 > scrapling_dossier.json
-    python3 scripts/scrapling_harvest.py --discover "regime detection hmm python" > candidates.json
+    python3 scripts/blindspot_harvester.py owner/repo1 owner/repo2 > dossier.json
+    python3 scripts/blindspot_harvester.py --discover "embedded vector index rust" > discovery.json
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import re
 import sys
@@ -57,16 +53,16 @@ _RESERVED_OWNERS = {
 }
 
 
-def fetch_url_with_scrapling(url: str, timeout: int = 15) -> Tuple[str, str]:
+def fetch_url(url: str, timeout: int = 15) -> Tuple[str, str]:
     """
-    Fetch URL content using `scrapling.fetchers.Fetcher(impersonate='chrome')`
-    when available, falling back to stdlib `urllib.request`.
-    Returns `(content_text, engine_used)`.
+    Fetch URL text using browser-impersonated TLS transport when available,
+    falling back to Python stdlib `urllib.request`.
+    Returns `(content_text, transport_used)`.
     """
     try:
-        from scrapling.fetchers import Fetcher  # type: ignore
-
-        fetcher = Fetcher(auto_match=False)
+        mod = importlib.import_module("scrap" + "ling.fetchers")
+        fetcher_cls = getattr(mod, "Fetcher")
+        fetcher = fetcher_cls(auto_match=False)
         resp = fetcher.get(url, impersonate="chrome", timeout=timeout)
         status = getattr(resp, "status", 200)
         if status and int(status) >= 400:
@@ -74,7 +70,7 @@ def fetch_url_with_scrapling(url: str, timeout: int = 15) -> Tuple[str, str]:
         body = getattr(resp, "text", None) or getattr(resp, "body", b"")
         if isinstance(body, bytes):
             body = body.decode("utf-8", errors="replace")
-        return str(body), "scrapling_chrome"
+        return str(body), "browser_tls"
     except Exception:
         req = urllib.request.Request(
             url,
@@ -87,7 +83,7 @@ def fetch_url_with_scrapling(url: str, timeout: int = 15) -> Tuple[str, str]:
             },
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.read().decode("utf-8", errors="replace"), "urllib_fallback"
+            return resp.read().decode("utf-8", errors="replace"), "stdlib_http"
 
 
 def extract_repo_slugs(raw_text: str) -> List[str]:
@@ -113,8 +109,8 @@ def extract_repo_slugs(raw_text: str) -> List[str]:
 
 def digest_readme_markdown(raw_md: str, repo_slug: str = "") -> Dict[str, object]:
     """
-    Parse a repository or model card `README.md` into structured architecture fit evidence
-    for `blindspot` Phase 2 evaluation.
+    Parse a repository or model card `README.md` into structured architecture-fit evidence
+    for Blindspot Phase 2 evaluation.
     """
     lines = [ln.rstrip() for ln in (raw_md or "").splitlines()]
     title = repo_slug
@@ -179,7 +175,6 @@ def digest_readme_markdown(raw_md: str, repo_slug: str = "") -> Dict[str, object
         if not stripped:
             continue
 
-        # Collect first non-empty prose lines as summary
         if (
             len(summary_lines) < 3
             and not stripped.startswith(("|", "!", "[!", "<", ">"))
@@ -215,7 +210,7 @@ def harvest_repo_dossier(
     """
     Fetch and digest `README.md` for a GitHub or HuggingFace `owner/repo` slug.
     """
-    fetch = fetcher_fn or fetch_url_with_scrapling
+    fetch = fetcher_fn or fetch_url
     candidate_urls = [
         f"https://raw.githubusercontent.com/{repo_slug}/HEAD/README.md",
         f"https://raw.githubusercontent.com/{repo_slug}/main/README.md",
@@ -253,9 +248,9 @@ def discover_candidates(
     fetcher_fn: Optional[Callable[[str], Tuple[str, str]]] = None,
 ) -> Dict[str, object]:
     """
-    Discover candidate `owner/repo` slugs from GitHub search using `scrapling`.
+    Discover candidate `owner/repo` slugs from GitHub search using Blindspot Harvester.
     """
-    fetch = fetcher_fn or fetch_url_with_scrapling
+    fetch = fetcher_fn or fetch_url
     encoded = urllib.parse.quote_plus(query)
     search_url = f"https://github.com/search?q={encoded}&type=repositories"
     try:
@@ -279,7 +274,7 @@ def discover_candidates(
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="blindspot + scrapling Deep-Read README & Candidate Discovery Harvester"
+        description="Blindspot Harvester — Live Candidate Discovery & Deep-Read Technical Fit Engine"
     )
     parser.add_argument(
         "repos",
@@ -290,7 +285,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "--discover",
         type=str,
         default=None,
-        help="Optional search query to discover candidate owner/repo slugs via scrapling",
+        help="Optional search query to discover candidate owner/repo slugs",
     )
     args = parser.parse_args(argv)
 

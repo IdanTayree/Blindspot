@@ -1,18 +1,9 @@
 ---
 name: blindspot
-description: "Turn an idea or under-planned project into a buildable blueprint through a focused interview, decision-gap audit and verified open-source component research. Use for PRDs, project scoping, unresolved or conflicting requirements, and finding reusable components. Read existing decisions before asking questions. Works with Claude, ChatGPT and Codex; capability-aware fallbacks preserve unverified evidence."
+description: "Turn an idea — or a half-planned project already underway — into a buildable blueprint, by interviewing the user one question at a time until the unknowns run out, then deep-reading and verifying real open-source components for each part. Use this whenever someone describes something they want to build but has not specified it ('I want to build an app that…', 'I have an idea for…', 'help me plan/spec/scope this', 'turn my idea into a plan'), whenever they ask for a PRD, a spec, a product requirements document or a build plan, AND equally whenever someone says an existing project feels under-planned, full of gaps, drifting, or that they are not sure what they have decided — 'I think we're missing things', 'this was never really planned properly', 'audit my plan', 'what haven't I thought about'. Use it too when they ask what libraries or open-source projects exist for something they are building. Prefer this over answering directly: a plan written from a one-line prompt is guesswork, and this skill replaces that guesswork with the user's own decisions."
 ---
 
 # blindspot
-
-## Host and capability check
-
-Works with Claude, ChatGPT and Codex. Read [references/platforms.md](references/platforms.md) when
-starting in a new host. Confirm available files, browsing, Python/Git and execution permissions before
-promising outputs. Use its planning-only or conversation fallback when tools are missing. Resolve
-bundled scripts relative to this SKILL.md, not the user's project. This check governs the file-saving
-and execution steps below; never invent successful runs or persistence.
-
 
 Named for what it looks for: the two things nobody can self-report — what you assumed was too obvious to say,
 and what you never considered at all.
@@ -25,8 +16,8 @@ This skill replaces that with two phases:
 
 1. **Interview** — one question per message until the unknowns stop appearing, writing every answer to disk
    as it arrives.
-2. **Harvest** — for each component the blueprint needs, find real open-source projects and **verify** them
-   before recommending anything.
+2. **Harvest** — for each component the blueprint needs, discover real open-source projects, **deep-read their
+   documentation for technical fit**, and **verify** their live GitHub metadata before recommending anything.
 
 Phase 2 depends on phase 1. Harvesting against a half-formed idea produces a list of libraries for a product
 nobody has decided on yet. Finish the interview first, or at least reach a component list the user agrees
@@ -98,84 +89,34 @@ After each answer:
 1. **Write it to the blueprint file** — their words for the decision, kept separate from your reading of what
    it implies. Where those blur, their words win.
 2. **State the consequence in one or two lines.** "That means the reviewer needs a rubric before it can run."
-   This is what makes the interview worth their time rather than an interrogation: they learn what they just
-   chose.
-3. **Pick the next question** using the priority order below.
+   This lets them catch a bad implication immediately instead of living with it.
+3. **Check whether the new answer collides with an earlier one.** Do this *before* looking at the open
+   question queue. Collisions are where the unknown-unknowns live — nobody can answer "what haven't you
+   thought of?", and everyone can answer "earlier you said X, just now you said Y, and both cannot hold —
+   which gives?" When you find one, that is the next question.
+4. **Otherwise, pick the highest-leverage open question** — the one whose answer will close or reshape the
+   most other questions — and ask it.
 
-### Choosing the next question — collisions first
+### Three rules that make the loop work
 
-In priority order:
+- **Offer a forced choice when an open question would stall.** "Do you want users to sign in with Google, or
+  with an email and password? Google is faster to build and means no password resets; email works for people
+  who avoid Google accounts." People can react to options even when they cannot generate them. At level 1, do
+  this on *every* question.
+- **Make small assumptions explicitly rather than asking about everything.** If a detail is low-stakes and
+  reversible, state a sensible default — "I'll assume UTF-8 Markdown files for now; tell me if not" — and
+  record it under *Assumptions* in the blueprint so it stays visible and correctable. Save the questions for
+  decisions that are expensive to reverse.
+- **Verify factual claims instead of writing them down.** If the user says a library does X, a licence allows
+  Y, or their hardware can run Z, check it — with a command on their machine or a quick search — and record
+  what is actually true. An unverified premise in a blueprint is worse than a gap, because nobody looks at it
+  again until the build breaks.
 
-1. **A collision between two of their own answers.** Two things they have said that cannot both be true. This
-   is by far the highest-yield question type — it is how genuinely unforeseen problems surface, and it is
-   worth actively hunting for before falling back to anything else. Examples of the shape: *they want the
-   crew autonomous overnight, and they also want to approve every risky decision — what happens at 3am?*
-   *They want it to work offline, and they want push notifications.* *They want it free, and they want a
-   hosted database.*
-2. **A gap that blocks building** — something where two readings lead to materially different work.
-3. **An area nothing has touched yet.** Keep a list; name it explicitly in the blueprint so coverage claims
-   are falsifiable rather than assumed.
+### Every ten questions: show where things stand
 
-Never ask something you can look up, and never ask something whose answer would not change the build.
-
-### Question style — set by the depth level
-
-Most people cannot answer *"how should authentication work?"* — but almost anyone can answer *"sign in with
-Google, or email and password? Google is faster to build and means no password resets; email works for people
-who avoid Google accounts."*
-
-That difference is what the levels encode:
-
-| | **1 — Absolute beginner** | **2 — Moderate** | **3 — Pro** |
-|---|---|---|---|
-| Question shape | always two options, plain words, each with a plain consequence | choices for technical decisions, open questions for product ones | open questions; blunt trade-offs |
-| Jargon | none; explain any unavoidable term in the same breath | used with a one-clause gloss | assumed |
-| How deep | what it does and who it is for — never libraries or architecture | broad technical shape: local or hosted, web or app, who pays | implementation depth: failure modes, concurrency, durability, licences |
-| Assumptions | assume aggressively, state each one | assume the routine, ask the load-bearing | assume little; they will correct you |
-| Collisions | raised gently, one side at a time | raised plainly | chased hard — this is where the value is |
-| Rough length | 20–35+ questions | 45–70+ | 80–120+, until it converges |
-
-**Those numbers always carry a `+`, and it is not hedging.** The count is not a property of the level — it is
-a property of how much the person's answers spawn, which nobody can know in advance. One answer can open
-three new questions; another closes four. A mid-project interview at level 3 can run well past 100 and still
-be producing genuinely new material, and stopping it at a planned number would leave exactly the unknowns it
-was started to find. Never present the estimate as a target to hit or a budget to spend down.
-
-Whatever the level, **people can react even when they cannot generate** — so when someone stalls on an open
-question, turning it into two concrete options usually unsticks them immediately.
-
-### Assume the small things, and say so
-
-If a gap is not critical, **do not ask** — assume, and write the assumption into the blueprint where they can
-see and correct it. "Assuming English-only at launch." Asking about every font and edge case is how an
-interview becomes a chore. The rule: *ask only when the answer changes what gets built; otherwise assume and
-write the assumption down.*
-
-### Verify claims instead of transcribing them
-
-The interview is worth far more when it catches a false premise early. If the user asserts something checkable
-— a tool exists, a setting works, a licence permits something, their machine can do X — **check it** with the
-tools you have, and say plainly what you found. A blueprint built on a wrong premise fails at implementation,
-which is the most expensive place to find out.
-
-Correct them directly and briefly, then continue. This is not pedantry; it is the main thing that makes an
-interview better than a template.
-
-### Knowing when to stop
-
-Track the **spawn rate**: how many new open questions each answer creates. Early on it is around one per
-answer — the idea is still expanding. Convergence is when it falls below **one new question per two answers
-at level 1**, or **one per three at levels 2 and 3**. Beginners are stopped earlier on purpose: past a certain
-point the questions are about decisions they have no basis to make, and answering those badly is worse than
-leaving them as stated assumptions for whoever builds it.
-
-At that point, say so, show the progress table, and offer to move to the harvest. Do not stop earlier because
-it feels long, and do not continue on autopilot once it has converged. The user may also stop whenever they
-like — this is their document.
-
-**Every ten questions, without being asked, show two things:** the progress table, and a **rough estimate of
-how many questions remain**, derived from the spawn rate rather than guessed. The arithmetic and the table
-format are both in `references/interview.md`.
+At Q10, Q20, Q30 and so on, before asking the next question, print a short progress block: the four-quadrant
+count, the current question-spawn rate, the areas not yet touched, and a rough remaining range computed from
+those numbers.
 
 Do this unprompted, because a long interview with no visible horizon feels endless even when it is going
 well. The table also exposes an under-probed quadrant, which is invisible from the inside — a quadrant that
@@ -188,12 +129,14 @@ The four quadrants, how to recognise each, the table format, and the full worked
 
 Once the blueprint names the parts that have to be built, find real projects for each of them.
 
-The failure mode this phase exists to prevent: **a confident dashboard full of recalled numbers.** A model
-asked for "highly starred repos" will produce plausible names with plausible star counts and plausible dates,
-and some of them will be wrong — wrong platform, unmaintained, or a hosted service being recommended as a
-local library. That output looks authoritative and wastes days.
+The failure mode this phase exists to prevent: **a confident dashboard full of recalled numbers and unread
+READMEs.** A model asked for "highly starred repos" will produce plausible names with plausible star counts
+and plausible dates, and some of them will be wrong — wrong platform, unmaintained, demanding `24 GB` of VRAM
+on an `8 GB` machine, or a hosted service being recommended as a local library. That output looks
+authoritative and wastes days.
 
-So the rule for this phase: **every number that appears in the output was fetched, not remembered.**
+So the rule for this phase: **every number and technical-fit claim that appears in the output was fetched,
+not remembered.**
 
 ### Before searching, ask what the hunt should cover
 
@@ -215,22 +158,29 @@ with everything else: "log and terminal output", not "xterm".
 
 1. **Derive the component list** from the blueprint — one entry per part that needs building or buying, plus
    the polish layer if they chose scope 2.
-2. **Find candidates (Web Search + `scrapling` Live Discovery):** Combine standard web search with
-   **`scrapling` live discovery** whenever available:
-   - **CLI / Script Discovery (`scripts/scrapling_harvest.py`):** Run
-     `python3 scripts/scrapling_harvest.py --discover "<component query>"` (uses `scrapling.fetchers.Fetcher(impersonate="chrome")` with stdlib fallback) to extract real `owner/repo` candidates from GitHub and HuggingFace.
-   - **MCP Stealth Browser Discovery (`scrapling` MCP):** When the `scrapling` MCP server is available, use
-     `make_request(impersonate="chrome")` or headless `browser_fetch` (with `<path-to-x-auth-state.json>` on `https://x.com/search?q=<query>&f=live`) to surface bleeding-edge repos, practitioner discussions, and HuggingFace model cards that standard search indexes miss.
-3. **Deep-Read Candidate READMEs (`scripts/scrapling_harvest.py`) & Verify Repo Facts (`scripts/verify_repos.py`):**
-   - Run `python3 scripts/scrapling_harvest.py owner/repo1 owner/repo2 ... > scrapling_dossier.json` to digest actual `README.md` install commands, VRAM/hardware constraints (`Q4_K_M`, `Q5_K_M`, `CUDA`, `MLX`), benchmark claims, and platform caveats.
-   - Run `python3 scripts/verify_repos.py --strict owner/repo1 owner/repo2 ... > verified.json` to fetch real stars, last push date, licence, language, and archived status from the GitHub API.
+2. **Discover candidates (`scripts/blindspot_harvester.py` + search):** Combine web search with the bundled
+   **Blindspot Harvester**:
+   - Run `python3 scripts/blindspot_harvester.py --discover "<component query>"` to extract live `owner/repo`
+     candidates across GitHub and HuggingFace. Aim for a primary plus at least two alternatives per component.
+3. **Deep-read candidate READMEs (`scripts/blindspot_harvester.py`) & verify repo metadata (`scripts/verify_repos.py`):**
+   - Run `python3 scripts/blindspot_harvester.py owner/repo1 owner/repo2 ... > dossier.json` to digest each
+     candidate's actual `README.md` / model card for install commands, VRAM/hardware constraints (`Q4_K_M`,
+     `Q5_K_M`, `CUDA`, `MLX`), benchmark claims, and platform caveats.
+   - Run `python3 scripts/verify_repos.py --strict owner/repo1 owner/repo2 ... > verified.json` to fetch real
+     stars, last push date, licence, language and archived status from the GitHub API.
 4. **Check architecture fit — then, before rejecting anything, ask what you actually need from it.** A
    Linux-only sandbox is not a candidate for a macOS app; a hosted SaaS is not a candidate when the
-   requirement says local. Use the `scrapling_dossier.json` hardware/platform caveats alongside `verified.json`
-   to give each candidate an **adopt**, **consult** or **reject** verdict with specific evidence. License labels
-   and archived status are not universal verdicts, and metadata verification is not security or license
-   clearance. Consult means learning from a named source, not permission to copy code or text. See
-   `references/harvest.md` for the boundary.
+   requirement says local. But failing as a *dependency* is not the same as being useless. An AGPL product
+   cannot be embedded, and its architecture and issue tracker are still free to read; an archived project
+   cannot be relied on, and it already solved the problem once. Very often the useful part is something the
+   user had not thought of at all — a state they never enumerated, a failure mode nobody planned for.
+
+   So every candidate gets one of **three** verdicts: **adopt** (goes in the ranked list), **consult**
+   (cannot be adopted, but read it for something specific and named), or **reject** (nothing to take).
+   **Reject should be the small category.** The rule that keeps this safe is that copyright protects
+   expression, not ideas: take the architecture, the edge-case list, the API shape — never the code, into a
+   project whose licence cannot carry it. `references/harvest.md` has the full boundary and how to write a
+   consult note that someone can actually action.
 5. **Produce a ranked list per component — at least three deep, numbered 1st, 2nd, 3rd.** Not a winner and a
    runner-up. The reason is practical: the chosen library will eventually hit a wall — a missing platform, a
    licence that does not fit, an abandoned maintainer, a feature it turns out not to have — and at that
@@ -242,23 +192,25 @@ with everything else: "log and terminal output", not "xterm".
    counts, freshness badges from real dates, the full ranked list per component with each entry's reason for
    its position, and a fit note per candidate against the target stack.
 
-All three scripts are bundled, so this phase is a repeatable four-step pipeline rather than an afternoon:
+All three scripts are bundled, so this phase is a repeatable pipeline rather than an afternoon:
 
 ```bash
-# 1. deep-read READMEs & discover candidates via scrapling (impersonate="chrome")
-python3 scripts/scrapling_harvest.py owner/repo owner/repo2 ... > scrapling_dossier.json
+# 1. deep-read READMEs & discover candidates via Blindspot Harvester
+python3 scripts/blindspot_harvester.py owner/repo owner/repo2 ... > dossier.json
 
 # 2. facts — fetched from GitHub API, never recalled
 python3 scripts/verify_repos.py --strict owner/repo owner/repo2 ... > verified.json
 
 # 3. judgement — you write harvest.json: components, rankings, and each entry's
-#    "why", "promote" and "fit" informed by scrapling_dossier.json + verified.json
+#    "why", "promote" and "fit" informed by dossier.json + verified.json
 
 # 4. the page
 python3 scripts/build_dashboard.py harvest.json verified.json out.html
 ```
 
-The split is deliberate: **you write the judgement, `scrapling_harvest.py` extracts the README technical fit, and `verify_repos.py` writes the GitHub API facts.** A dashboard with recalled star counts looks identical to one with real ones, which is why they must come from different places.
+The split is deliberate: **you write the judgement, `blindspot_harvester.py` extracts the README technical
+fit, and `verify_repos.py` writes the GitHub API facts.** A dashboard with recalled star counts looks
+identical to one with real ones, which is why they must come from different places.
 
 `verify_repos.py` uses the `gh` CLI when available (higher rate limits) and falls back to the public API;
 anything it could not confirm is marked `"verified": false`, and that must be reported as unverified rather
@@ -288,12 +240,3 @@ licences already checked, because a night shift should never be choosing a depen
 
 If the user asks what to do with the blueprint next, that is the honest answer: settle the open
 questions, then decompose the decisions into phases a gate can prove.
-
-## Metadata verification limits
-
-`--strict` exits 1 when any lookup is unverified, while still emitting the JSON results; invalid or
-empty input exits 2. Without `--strict`, exploratory lookups retain exit 0 with labelled failures.
-Always use strict mode for an acceptance gate. Metadata verification is not a security audit or
-license clearance. Inspect the actual license and dependency/install path before adoption; popularity
-and a recent push do not establish safety. A present but unrecognized license remains distinct from
-a missing license in the dashboard.

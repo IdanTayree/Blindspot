@@ -4,14 +4,14 @@
 
 # Blindspot
 
-**A skill for Claude, ChatGPT and Codex that turns an idea — or a half-planned project — into something you can actually build.**
+**An AI skill that turns an idea — or a half-planned project — into something you can actually build.**
 
 Named for what it hunts: the two things nobody can self-report — what you assumed was too obvious to say,
 and what you never thought of at all.
 
-One question at a time, until the unknowns run out. Then real components, with real numbers.
+One question at a time, until the unknowns run out. Then real components, deep-read and verified, with real numbers.
 
-[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Hunt scope](#two-scopes-asked-before-searching) · [With Night Watch](#pairs-with-night-watch) · [Examples](examples/)
+[Install](#install) · [How it works](#how-it-works) · [The method](#the-method) · [Depth levels](#three-depths-chosen-up-front) · [Hunt scope](#two-scopes-asked-before-searching) · [Blindspot Harvester](#the-blindspot-harvester--reading-the-repo-not-just-the-badge) · [With Night Watch](#pairs-with-night-watch) · [Examples](examples/)
 
 </div>
 
@@ -29,7 +29,7 @@ The other version of the same problem: **a project already underway** that was n
 momentum, and a growing sense that something is missing. By the time anyone notices, the gaps are
 load-bearing.
 
-This skill handles both.
+This skill handles both — across any AI coding agent or assistant.
 
 ## How it works
 
@@ -38,19 +38,21 @@ hunt at. Both are cheap to answer and expensive to get wrong.
 
 | | **Phase 1 — the interview** | **Phase 2 — the harvest** |
 |:--|:--|:--|
-| **What happens** | one question per message until the unknowns stop appearing | real open-source candidates found and verified for each part |
+| **What happens** | one question per message until the unknowns stop appearing | live open-source candidates discovered, deep-read for technical fit, and verified against the GitHub API |
 | **Asks first** | [which depth](#three-depths-chosen-up-front) — beginner, moderate, pro | [which scope](#two-scopes-asked-before-searching) — components, or anything that saves work |
+| **Bundled engines** | quadrant & collision tracker | `blindspot_harvester.py` + `verify_repos.py` + `build_dashboard.py` |
 | **You get** | `<slug>-blueprint.md` | `<slug>-harvest.html` |
 
 **Phase 1** is one question per message — not a form, not a batch of five. People answer forms shallowly, and
 shallow answers are exactly the ones that produce a wrong build. Every answer is written to disk as it
 arrives, because a long interview outlives the context window.
 
-**Phase 2** takes each part the blueprint needs and finds real projects for it, **verifying** every one —
-stars, last commit, licence, platform — before recommending anything.
+**Phase 2** takes each part the blueprint needs, discovers real open-source projects and model cards for it,
+**deep-reads their documentation for hardware, benchmark and platform constraints**, and **verifies** their live
+GitHub metadata — stars, last commit, licence, renames — before recommending anything.
 
-You end with two files: a blueprint containing your own decisions, and a dashboard of components whose
-numbers were fetched rather than remembered. Both are in [`examples/`](examples/).
+You end with two files: a blueprint containing your own decisions, and a self-contained HTML dashboard of
+components whose technical fit and numbers were fetched rather than remembered. Both are in [`examples/`](examples/).
 
 ![The generated component dashboard: ranked candidates per component, each with verified stars, freshness, licence, and the reason it sits at that position](assets/dashboard-example.png)
 
@@ -206,6 +208,29 @@ app** — the kind of failure that costs days rather than credibility.
 So the rule for phase 2 is simple: **every number in the output was fetched.** Anything that could not be
 fetched is labelled unverified rather than filled in.
 
+## The Blindspot Harvester — reading the repo, not just the badge
+
+Live GitHub metadata solves half the problem. It proves a repository exists, has `39,660` stars, was pushed
+yesterday, and carries an MIT badge.
+
+**It does not tell you what sits inside the README.**
+
+A repository can pass every API check and still fail on your machine five minutes after `git clone`: it needs
+`24 GB` of VRAM when your GPU has `8 GB`, its kernel module is `Linux-only` while you are targeting macOS,
+its quantization format changed in `v1.1`, or its real throughput benchmark is half what a blog post claimed.
+
+That is why Phase 2 ships with **`Blindspot Harvester` (`scripts/blindspot_harvester.py`)** alongside
+`verify_repos.py`:
+
+| Engine | What it fetches | Output |
+|:--|:--|:--|
+| **`scripts/blindspot_harvester.py`** | Discovers live `owner/repo` candidates across GitHub and HuggingFace (`--discover`), then deep-reads each candidate's raw `README.md` / model card for install commands, VRAM/GPU footprint, benchmark claims, and platform caveats | `dossier.json` |
+| **`scripts/verify_repos.py`** | Queries the GitHub API (`gh` CLI with public API fallback) for exact stars, last push date, freshness, SPDX licence, archived status, and silent slug renames | `verified.json` |
+| **`scripts/build_dashboard.py`** | Merges your ranked architectural judgement (`harvest.json`) with the verified metadata into a self-contained, filterable HTML dashboard | `<slug>-harvest.html` |
+
+The separation of powers is deliberate: **you write the architectural judgement, `blindspot_harvester.py`
+extracts the technical fit from the docs, and `verify_repos.py` writes the GitHub API facts.**
+
 ### Three verdicts, not two
 
 The obvious way to handle an AGPL project, an archived one, or a model with a commercial licence is to
@@ -218,22 +243,23 @@ useless.**
 | **Consult** | Cannot be adopted, but worth reading for something specific — named explicitly. |
 | **Reject** | Nothing to take. Wrong problem, or genuinely unsafe. |
 
-**Reject is the small category.** A dependency that does not fit this project's license,
-platform or maintenance requirements may still have useful public documentation and failure reports.
-Determine adoption case by case: AGPL, commercial terms or archived status are not universal verdicts.
-Record the actual constraint and evidence behind each decision.
+**Reject is the small category.** An AGPL product cannot be embedded, and its architecture and issue tracker
+are free to read. An archived project cannot be relied on, and it already solved the problem once. A
+commercially licensed model cannot ship, and the shape of its API is often the best available specification
+for the thing you are about to build. Frequently the useful part is something you had not thought of at
+all — a state you never enumerated, a failure mode nobody planned for.
 
-A consult recommendation identifies what to learn and links its source. It is not permission to copy
-code, text or distinctive structure. Check applicable terms before reuse; GitHub license metadata
-alone does not settle compatibility. Prefer documentation, issue discussions and release notes for
-understanding behavior, with attribution where appropriate.
+The line that keeps this safe is not a technicality: **copyright protects expression, not ideas.** Reading a
+public repository to understand how a problem was solved is ordinary engineering; copying its code into a
+project whose licence cannot carry it is not. So consults are sourced from documentation, issue trackers,
+changelogs and API shapes — in that order — and never by paraphrasing a file.
 
 The issue tracker is the most undervalued source in open source: a list of everything that went wrong in
 production, written by the people it happened to.
 
 A consult entry is worthless unless it names the extraction. Compare *"worth reading for inspiration"* with:
 
-> **Cannot adopt for this project:** the current license requirements have not been shown compatible with this dependency; adoption remains unapproved.
+> **Cannot adopt:** AGPL-3.0 — linking it in would force the whole project's licence.
 > **Take:** its cycles-and-modules model, a working answer to "what sits between a project and a task" — the
 > exact gap in the roadmap design. Read the product docs and the issues tagged `cycles`, not the source.
 
@@ -277,95 +303,71 @@ Use this skill while the shape of the thing is still in question. Use Night Watc
 
 ## Install
 
-### Claude Code
+Blindspot is provider-agnostic and works in any AI coding agent or assistant that supports `SKILL.md` skills
+(Claude Code, Antigravity, Cursor, Codex, Windsurf, Cline, or any custom agent workspace):
 
 ```bash
-git clone https://github.com/IdanTayree/Blindspot.git ~/.claude/skills/blindspot
-```
-
-### ChatGPT desktop and Codex
-
-Use the skill installer with this repository URL, or place the complete skill folder in a supported
-local skills directory. For Codex user-level discovery:
-
-```bash
+# Universal agent skill directory (Antigravity, Cursor, Codex, Windsurf)
 git clone https://github.com/IdanTayree/Blindspot.git ~/.agents/skills/blindspot
+
+# Claude Code skill directory
+git clone https://github.com/IdanTayree/Blindspot.git ~/.claude/skills/blindspot
+
+# Project-local skill directory (inside any repository)
+git clone https://github.com/IdanTayree/Blindspot.git .agents/skills/blindspot
 ```
 
-If that directory already exists, review/update it instead of overwriting it. In ChatGPT's skill
-picker mention `@blindspot`; in Codex use `$blindspot`. Actual availability depends on the host and workspace.
+Then start a session in your agent of choice and describe an idea — or point it at an existing repo. It
+triggers on *"I want to build…"*, *"help me spec this"*, *"turn my idea into a plan"*, a request for a PRD,
+or *"this was never really planned properly"*.
 
-### ChatGPT in a conversation or Project
+## Using the harvester and verifier on their own
 
-Upload `SKILL.md` and the files under `references/`, then say:
-
-> Use Blindspot from the uploaded instructions. First check which tools and project files you can
-> actually access. Follow the applicable workflow and clearly label anything you cannot verify.
-
-For a dashboard, also provide the scripts and assets/dashboard_template.html when code execution is available. Uploads alone do not grant access to your Mac or start a background worker.
-[Host capabilities and fallbacks](references/platforms.md) explain the supported modes.
-These are portable skills, not published ChatGPT marketplace plugins. Web/mobile native distribution
-can use OpenAI's plugin packaging process; that is separate from uploading instructions to a Project.
-
-Official guidance checked 2026-09-23: [skills and local discovery](https://learn.chatgpt.com/docs/build-skills),
-[Projects and uploaded instructions](https://help.openai.com/en/articles/10169521-projects-in-chatgpt).
-
-## Using the verifier on its own
-
-No dependencies beyond Python 3:
+No required dependencies beyond Python 3:
 
 ```bash
+# 1. Discover live candidates & deep-read READMEs / model cards for technical fit
+python3 scripts/blindspot_harvester.py --discover "embedded vector index rust" > discovery.json
+python3 scripts/blindspot_harvester.py langchain-ai/langgraph crewAIInc/crewAI > dossier.json
+
+# 2. Fetch live GitHub API metadata (stars, last push, licence, archived status)
 python3 scripts/verify_repos.py --strict langchain-ai/langgraph crewAIInc/crewAI > verified.json
 python3 scripts/verify_repos.py --strict --file repos.txt        # one owner/repo per line
-```
 
-Returns stars, last push date, freshness, licence, language and archived status. It uses the `gh` CLI when
-installed (5,000 requests/hour instead of 60) and falls back to the public API.
+# 3. Render the interactive HTML component dashboard
+python3 scripts/build_dashboard.py harvest.json verified.json out.html
+```
 
 **Renames alone justify the run.** Verifying 60 candidates for one project turned up **nine slugs that had
 silently moved** — `microsoft/presidio`, `Byron/gitoxide`, `argmaxinc/WhisperKit`, `block/goose` and others
 all redirect now. A stale slug in someone's notes outlives the rename by years.
 
-To rebuild a dashboard after editing the rankings:
-
-```bash
-python3 scripts/build_dashboard.py harvest.json verified.json out.html
-```
+`--strict` exits `1` when any lookup is unverified while still emitting the JSON results; invalid or empty
+input exits `2`.
 
 ## Layout
 
 ```
 blindspot/
-├── SKILL.md                     the two phases and the loop
+├── SKILL.md                        the two phases and the loop
 ├── references/
-│   ├── interview.md             quadrants, collision seams, depth levels, the progress table
-│   └── harvest.md               verification protocol and dashboard requirements
-├── examples/                    a real blueprint, ranking spec and rendered dashboard
+│   ├── interview.md                quadrants, collision seams, depth levels, the progress table
+│   └── harvest.md                  deep-read harvesting, verification protocol, and dashboard rules
+├── examples/                       a real blueprint, ranking spec and rendered dashboard
 ├── assets/
-│   ├── dashboard_template.html  the dashboard's look — edit here, not in Python
-│   ├── logo.svg / logo-mono.svg the mark: a whole field with a hole punched off-centre
-│   └── social-preview.png       1280×640, for GitHub's social preview setting
-└── scripts/
-    ├── scrapling_harvest.py     live candidate discovery & README technical fit harvester
-    ├── verify_repos.py          GitHub metadata, fetched not recalled
-    └── build_dashboard.py       merges the ranked judgement into the template
+│   ├── dashboard_template.html     the dashboard's look — edit here, not in Python
+│   ├── logo.svg / logo-mono.svg    the mark: a whole field with a hole punched off-centre
+│   └── social-preview.png          1280×640, for GitHub's social preview setting
+├── scripts/
+│   ├── blindspot_harvester.py      live candidate discovery & README technical-fit engine
+│   ├── verify_repos.py             GitHub metadata, fetched not recalled
+│   └── build_dashboard.py          merges the ranked judgement into the template
+└── tests/
+    └── test_helpers.py             offline unit test suite for harvester, verifier & dashboard
 ```
 
 The template is a real file rather than a string inside the script, so every project's dashboard comes out
 consistent instead of being reinvented per run — and reskinning means editing CSS, not code.
-
-## Licence
-
-MIT — see [LICENSE](LICENSE).
-
-## Metadata verification limits
-
-`--strict` exits 1 when any lookup is unverified, while still emitting the JSON results; invalid or
-empty input exits 2. Without `--strict`, exploratory lookups retain exit 0 with labelled failures.
-Always use strict mode for an acceptance gate. Metadata verification is not a security audit or
-license clearance. Inspect the actual license and dependency/install path before adoption; popularity
-and a recent push do not establish safety. A present but unrecognized license remains distinct from
-a missing license in the dashboard.
 
 ## Tests
 
@@ -373,4 +375,8 @@ a missing license in the dashboard.
 python3 -m unittest discover -s tests -v
 ```
 
-The suite uses mocked API responses and parses rendered HTML; it does not require credentials or network.
+The suite uses mocked responses and parses rendered HTML; it requires no credentials or network access.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).

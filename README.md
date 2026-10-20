@@ -346,6 +346,7 @@ blindspot/
 │   ├── logo.svg / logo-mono.svg the mark: a whole field with a hole punched off-centre
 │   └── social-preview.png       1280×640, for GitHub's social preview setting
 └── scripts/
+    ├── scrapling_harvest.py     live candidate discovery & README technical fit harvester
     ├── verify_repos.py          GitHub metadata, fetched not recalled
     └── build_dashboard.py       merges the ranked judgement into the template
 ```

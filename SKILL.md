@@ -215,16 +215,22 @@ with everything else: "log and terminal output", not "xterm".
 
 1. **Derive the component list** from the blueprint — one entry per part that needs building or buying, plus
    the polish layer if they chose scope 2.
-2. **Find candidates** for each, using search. Aim for a primary plus one or two alternatives.
-3. **Verify every candidate** by running `scripts/verify_repos.py` (see below). It returns real stars, last
-   push date, licence, language and archived status from the GitHub API.
+2. **Find candidates (Web Search + `scrapling` Live Discovery):** Combine standard web search with
+   **`scrapling` live discovery** whenever available:
+   - **CLI / Script Discovery (`scripts/scrapling_harvest.py`):** Run
+     `python3 scripts/scrapling_harvest.py --discover "<component query>"` (uses `scrapling.fetchers.Fetcher(impersonate="chrome")` with stdlib fallback) to extract real `owner/repo` candidates from GitHub and HuggingFace.
+   - **MCP Stealth Browser Discovery (`scrapling` MCP):** When the `scrapling` MCP server is available, use
+     `make_request(impersonate="chrome")` or headless `browser_fetch` (with `<path-to-x-auth-state.json>` on `https://x.com/search?q=<query>&f=live`) to surface bleeding-edge repos, practitioner discussions, and HuggingFace model cards that standard search indexes miss.
+3. **Deep-Read Candidate READMEs (`scripts/scrapling_harvest.py`) & Verify Repo Facts (`scripts/verify_repos.py`):**
+   - Run `python3 scripts/scrapling_harvest.py owner/repo1 owner/repo2 ... > scrapling_dossier.json` to digest actual `README.md` install commands, VRAM/hardware constraints (`Q4_K_M`, `Q5_K_M`, `CUDA`, `MLX`), benchmark claims, and platform caveats.
+   - Run `python3 scripts/verify_repos.py --strict owner/repo1 owner/repo2 ... > verified.json` to fetch real stars, last push date, licence, language, and archived status from the GitHub API.
 4. **Check architecture fit — then, before rejecting anything, ask what you actually need from it.** A
    Linux-only sandbox is not a candidate for a macOS app; a hosted SaaS is not a candidate when the
-   requirement says local. A candidate that cannot be adopted under this project's constraints may
-   still offer useful documented edge cases. Give it an **adopt**, **consult** or **reject** verdict
-   with the specific evidence. License labels and archived status are not universal verdicts, and
-   metadata verification is not security or license clearance. Consult means learning from a named
-   source, not permission to copy code or text. See `references/harvest.md` for the boundary.
+   requirement says local. Use the `scrapling_dossier.json` hardware/platform caveats alongside `verified.json`
+   to give each candidate an **adopt**, **consult** or **reject** verdict with specific evidence. License labels
+   and archived status are not universal verdicts, and metadata verification is not security or license
+   clearance. Consult means learning from a named source, not permission to copy code or text. See
+   `references/harvest.md` for the boundary.
 5. **Produce a ranked list per component — at least three deep, numbered 1st, 2nd, 3rd.** Not a winner and a
    runner-up. The reason is practical: the chosen library will eventually hit a wall — a missing platform, a
    licence that does not fit, an abandoned maintainer, a feature it turns out not to have — and at that
@@ -236,21 +242,23 @@ with everything else: "log and terminal output", not "xterm".
    counts, freshness badges from real dates, the full ranked list per component with each entry's reason for
    its position, and a fit note per candidate against the target stack.
 
-Both scripts are bundled, so this phase is three commands rather than an afternoon:
+All three scripts are bundled, so this phase is a repeatable four-step pipeline rather than an afternoon:
 
 ```bash
-# 1. facts — fetched, never recalled
+# 1. deep-read READMEs & discover candidates via scrapling (impersonate="chrome")
+python3 scripts/scrapling_harvest.py owner/repo owner/repo2 ... > scrapling_dossier.json
+
+# 2. facts — fetched from GitHub API, never recalled
 python3 scripts/verify_repos.py --strict owner/repo owner/repo2 ... > verified.json
 
-# 2. judgement — you write harvest.json: components, rankings, and each entry's
-#    "why", "promote" and "fit" (the format is documented in build_dashboard.py)
+# 3. judgement — you write harvest.json: components, rankings, and each entry's
+#    "why", "promote" and "fit" informed by scrapling_dossier.json + verified.json
 
-# 3. the page
+# 4. the page
 python3 scripts/build_dashboard.py harvest.json verified.json out.html
 ```
 
-The split is deliberate: **you write the judgement, the scripts write the facts.** A dashboard with recalled
-star counts looks identical to one with real ones, which is why they must come from different places.
+The split is deliberate: **you write the judgement, `scrapling_harvest.py` extracts the README technical fit, and `verify_repos.py` writes the GitHub API facts.** A dashboard with recalled star counts looks identical to one with real ones, which is why they must come from different places.
 
 `verify_repos.py` uses the `gh` CLI when available (higher rate limits) and falls back to the public API;
 anything it could not confirm is marked `"verified": false`, and that must be reported as unverified rather

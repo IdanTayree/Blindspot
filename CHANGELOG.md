@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-10-20 — Scrapling live candidate discovery & README deep-read integration
+
+Added `scripts/scrapling_harvest.py` and Phase 2 `scrapling` discovery + README technical-fit digestion (`SKILL.md`, `references/harvest.md`, `README.md`, and `tests/test_helpers.py`). Uses `scrapling.fetchers.Fetcher(impersonate="chrome")` when available and gracefully falls back to Python stdlib `urllib.request`.
+
 ## 2026-09-23 — Verification hardening and ChatGPT compatibility
 
 Added opt-in strict metadata lookup exits, validated repository/API inputs, safe GitHub links, truthful license/freshness labels, and regression tests.

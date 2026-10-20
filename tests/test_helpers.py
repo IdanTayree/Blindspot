@@ -10,6 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import verify_repos as vr
 import build_dashboard as bd
+import scrapling_harvest as sh
 
 
 class DOM(HTMLParser):
@@ -94,6 +95,29 @@ class Helpers(unittest.TestCase):
     def test_invalid_count_is_unverified_not_crash(self):
         row = dict(self.row(), stars=None)
         self.assertEqual(bd.index([row]), {})
+
+    def test_scrapling_harvest_extracts_slugs_and_digests_readme(self):
+        raw_html = (
+            '<a href="https://github.com/D4Vinci/Scrapling">Scrapling</a> '
+            '<a href="https://github.com/topics/python">Topic</a> '
+            '<a href="https://huggingface.co/deadbydawn101/RavenX-Trade-8B-GGUF">HF</a>'
+        )
+        slugs = sh.extract_repo_slugs(raw_html)
+        self.assertEqual(slugs, ['D4Vinci/Scrapling', 'deadbydawn101/RavenX-Trade-8B-GGUF'])
+
+        sample_md = (
+            "# Fast-Engine\n\nA fast engine for local inference.\n\n"
+            "```bash\npip install fast-engine\n```\n"
+            "Requires 6GB VRAM on RTX GPUs with Q5_K_M quantization.\n"
+            "Achieves 65 tok/s throughput with low latency.\n"
+            "Note: Linux-only kernel module.\n"
+        )
+        dossier = sh.harvest_repo_dossier('owner/fast-engine', fetcher_fn=lambda u: (sample_md, 'mock'))
+        self.assertTrue(dossier['readme_fetched'])
+        self.assertIn('pip install fast-engine', dossier['install_commands'])
+        self.assertTrue(any('VRAM' in n for n in dossier['hardware_and_vram_notes']))
+        self.assertTrue(any('tok/s' in n for n in dossier['benchmark_and_perf_notes']))
+        self.assertTrue(any('Linux-only' in n for n in dossier['platform_and_license_caveats']))
 
 
 if __name__ == '__main__':

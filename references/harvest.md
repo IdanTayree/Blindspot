@@ -52,11 +52,20 @@ These are the cards users adopt fastest, because adoption is a single import rat
 decision — which is exactly why leaving them out feels like a thorough hunt right up until someone spends a
 day rebuilding a spinner.
 
-### 2. Search
+### 2. Search & Live `scrapling` Discovery
 
-Search the web for current candidates. Useful queries combine the job with the constraint — "durable task
-queue rust embedded", "on-device wake word detection macOS". Look for:
+Search the web and run **`scrapling` discovery** for current candidates. Useful queries combine the job with
+the constraint — "durable task queue rust embedded", "on-device wake word detection macOS".
 
+- **Scripted `scrapling` GitHub/HuggingFace Discovery:**
+  ```bash
+  python3 scripts/scrapling_harvest.py --discover "regime detection hmm python" > discovery.json
+  ```
+- **`scrapling` MCP Live Social & Model Card Discovery (when MCP is active):**
+  - Use `make_request(impersonate="chrome")` on GitHub topics, HuggingFace model cards (`https://huggingface.co/.../raw/main/README.md`), and Reddit engineering threads.
+  - For live X/Twitter practitioner threads, load `<path-to-x-auth-state.json>` via `browser_fetch` on `https://x.com/search?q=<query>&f=live` (strictly `headless=True`).
+
+Look for:
 - projects with real adoption, not just a good README
 - recent commits, not merely a recent release
 - a licence compatible with what the user is building
@@ -65,15 +74,21 @@ queue rust embedded", "on-device wake word detection macOS". Look for:
 out to be archived, on the wrong platform, or unlicensed, and a component that ends up with a single survivor
 is a component with no fallback.
 
-### 3. Verify — always, with the script
+### 3. Deep-Read READMEs (`scrapling_harvest.py`) & Verify Repo Metadata (`verify_repos.py`)
+
+Before judging architecture fit, run **both** bundled verification scripts:
 
 ```bash
+# Step 3a: Deep-read READMEs for install commands, VRAM/hardware specs, benchmarks & caveats
+python3 scripts/scrapling_harvest.py owner/repo another/repo > scrapling_dossier.json
+
+# Step 3b: Verify GitHub API metadata (stars, pushed_at, license, archived)
 python3 scripts/verify_repos.py --strict owner/repo another/repo > verified.json
 ```
 
-Returns per repo: `stars`, `pushed_at`, `days_since_push`, `license`, `language`, `archived`, `open_issues`,
-`description`, `html_url`, and `verified`. It uses the `gh` CLI when present and falls back to the public
-API.
+`scrapling_harvest.py` fetches each candidate's `README.md` (across GitHub and HuggingFace) using `scrapling.fetchers.Fetcher(impersonate="chrome")` (with `urllib` fallback) and extracts `install_commands`, `hardware_and_vram_notes`, `benchmark_and_perf_notes`, and `platform_and_license_caveats`.
+
+`verify_repos.py` returns per repo: `stars`, `pushed_at`, `days_since_push`, `license`, `language`, `archived`, `open_issues`, `description`, `html_url`, and `verified`. It uses the `gh` CLI when present and falls back to the public API.
 
 Rules that follow from the output:
 
